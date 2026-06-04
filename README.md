@@ -4,14 +4,16 @@
 
 AgentGuard is the middleware that enforces the **Checkpoint → Scan → Taint → Vault → Replace → Continue** lifecycle at every critical boundary.
 
-## Features (v2.0 P0)
+## Features (v2.0 Production-Ready)
 
 - **Taint Tracking Engine**: Propagate security tags from raw secrets to derived content (summaries, embeddings).
 - **Cryptographic Vault References**: Signed, short-lived references that replace raw secrets in agent memory.
-- **Vector Store Adapters**: Seamless integration with Chroma, Pinecone, and Qdrant to ensure zero secrets in permanent memory.
+- **Vector Store Adapters**: Production-ready adapters for **Pinecone, Chroma, and Qdrant**.
+- **x402 Payment Layer**: Native micropayments for autonomous agents to access hosted security services.
 - **PromptShield**: Real-time detection of prompt injection and data exfiltration attempts.
 - **Tamper-Evident Audit Logs**: Hash-chained logs for compliance and auditability.
 - **Ephemeral Core Hardening**: Isolated scanning and pruning via worker pools.
+- **Self-Hosting**: Full Docker support for private, free deployments.
 
 ## Installation
 
@@ -52,4 +54,4 @@ AgentGuard operates as a monorepo:
 
 ## License
 
-MIT - Free for self-hosting. Hosted tier via x402 payments.
+MIT - Free for self-hosting. Hosted tier via x402 agent-native micropayments. See `INTEGRATIONS.md` for runtime-specific guides.

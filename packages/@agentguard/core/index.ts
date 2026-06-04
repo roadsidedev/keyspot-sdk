@@ -8,6 +8,11 @@ export interface AgentGuardConfig extends ScannerOptions {
   workerPool?: { size: number };
   onSecretFound?: (match: Match) => Promise<void>;
   promptShield?: { enabled: boolean; rules?: PromptShieldRule[] };
+  hosted?: {
+    enabled: boolean;
+    agentWalletAddress?: string;
+    facilitatorUrl?: string;
+  };
 }
 
 export class AgentGuard {
@@ -18,7 +23,7 @@ export class AgentGuard {
   private auditLogger: AuditLogger;
   private onSecretFound?: (match: Match) => Promise<void>;
 
-  constructor(config: AgentGuardConfig = {}) {
+  constructor(private config: AgentGuardConfig = {}) {
     this.taintEngine = new TaintEngine();
     this.scanner = new Scanner(config, this.taintEngine);
     this.vault = config.vault || new InMemoryVaultAdapter();
@@ -30,6 +35,12 @@ export class AgentGuard {
     }
   }
 
+  private async checkHostedAccess(): Promise<boolean> {
+    // In production, this would call the facilitatorUrl
+    console.log(`[Hosted] Checking access for ${this.config.hosted?.agentWalletAddress}`);
+    return true; // Mocked for now
+  }
+
   async scan(data: any): Promise<Match[]> {
     return this.scanner.scan(data);
   }
@@ -39,6 +50,14 @@ export class AgentGuard {
   }
 
   async checkpoint(state: any): Promise<any> {
+    // x402 Check for hosted version
+    if (this.config.hosted?.enabled) {
+      const hasAccess = await this.checkHostedAccess();
+      if (!hasAccess) {
+        throw new Error('402 Payment Required: Hosted AgentGuard requires x402 payment.');
+      }
+    }
+
     // Audit log the checkpoint start
     this.auditLogger.log({ type: 'checkpoint_start', stateSummary: typeof state });
 
