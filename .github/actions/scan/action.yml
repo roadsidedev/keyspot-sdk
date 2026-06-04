@@ -1,0 +1,46 @@
+# AgentGuard GitHub Action — Scan PRs for secrets
+name: 'AgentGuard Scan'
+description: 'Scan pull request changes for leaked secrets using AgentGuard'
+author: 'AgentGuard'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  github_token:
+    description: 'GitHub token for commenting on PRs'
+    required: true
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+      working-directory: ${{ github.action_path }}
+
+    - run: pnpm run build
+      shell: bash
+      working-directory: ${{ github.action_path }}
+
+    - name: Scan changed files
+      run: |
+        CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+        for file in $CHANGED_FILES; do
+          echo "Scanning: $file"
+          node packages/@agentguard/cli/dist/index.js scan "$file" --json
+        done
+      shell: bash
+      working-directory: ${{ github.action_path }}

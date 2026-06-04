@@ -1,4 +1,4 @@
-import { AgentGuard } from './packages/@agentguard/core/index.js';
+import { AgentGuard } from '@agentguard/core';
 
 async function test() {
   const guard = new AgentGuard({

@@ -27,7 +27,7 @@ export class AWSSecretsAdapter extends BaseVaultAdapter {
     return response.Name!;
   }
 
-  async read(id: string, agentId?: string): Promise<string | null> {
+  async read(id: string, _agentId?: string): Promise<string | null> {
     // In production, you'd check agentId against AWS IAM or Resource Policies
     const command = new GetSecretValueCommand({ SecretId: id });
     try {

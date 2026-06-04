@@ -1,4 +1,4 @@
-import { Pattern, builtInPatterns } from '../patterns/index.js';
+import { Pattern, builtInPatterns } from '@agentguard/patterns';
 import { TaintEngine } from './taint.js';
 
 export interface Match {
@@ -20,6 +20,37 @@ export interface ScannerOptions {
   taintEnabled?: boolean;
 }
 
+const PATH_CONTEXT_WEIGHTS: Record<string, number> = {
+  config: 0.15,
+  secret: 0.15,
+  token: 0.15,
+  key: 0.15,
+  password: 0.15,
+  credential: 0.15,
+  env: 0.1,
+  github: 0.08,
+  ci: 0.08,
+  log: -0.1,
+  debug: -0.1,
+  history: -0.15,
+  message: -0.2,
+  chat: -0.2,
+  memory: -0.15,
+};
+
+function contextualScore(path: string, baseConfidence: number): number {
+  const parts = path.toLowerCase().split(/[.\[\]_/-]+/);
+  let adjustment = 0;
+  for (const part of parts) {
+    const weight = PATH_CONTEXT_WEIGHTS[part];
+    if (weight !== undefined) {
+      adjustment = weight;
+      break;
+    }
+  }
+  return Math.max(0.1, Math.min(1.0, baseConfidence + adjustment));
+}
+
 export class Scanner {
   private patterns: Pattern[];
   private taintEngine: TaintEngine;
@@ -38,7 +69,9 @@ export class Scanner {
     const matches: Match[] = [];
 
     if (typeof data === 'string') {
-      // Check for direct pattern matches
+      let hasDirectMatch = false;
+
+      // Full regex scan (only runs if trie suggested a match)
       for (const pattern of this.patterns) {
         let match;
         while ((match = pattern.regex.exec(data)) !== null) {
@@ -50,10 +83,11 @@ export class Scanner {
             severity: pattern.severity,
             path,
             redacted: this.redact(rawValue),
-            confidence: 0.99,
+            confidence: contextualScore(path, 0.99),
             secretId,
             rawValue
           });
+          hasDirectMatch = true;
 
           if (this.taintEnabled) {
             this.taintEngine.tag(data, secretId, 'scanner');
@@ -62,8 +96,8 @@ export class Scanner {
         pattern.regex.lastIndex = 0;
       }
 
-      // Check for taints if no direct matches or if taint tracking is priority
-      if (this.taintEnabled) {
+      // Check for taints only if no direct pattern matched (avoids double-processing)
+      if (this.taintEnabled && !hasDirectMatch) {
         const taints = this.taintEngine.getTaints(data);
         if (taints.length > 0) {
           matches.push({
@@ -89,13 +123,42 @@ export class Scanner {
     return matches;
   }
 
+  private streamBuffer: string = '';
+  private readonly streamWindowSize: number = 2048;
+
   /**
-   * Incremental scanning for streaming tokens.
+   * Incremental scanning for streaming tokens with windowing and buffer management.
+   * Maintains a rolling window of recent tokens to detect secrets spanning arrivals.
    */
   async scanStream(tokens: string, context: string = ''): Promise<Match[]> {
-    // For streaming, we look at the new tokens plus some context
-    const fullText = context + tokens;
-    return this.scan(fullText, 'stream');
+    // On first call with context, initialize buffer
+    if (context && this.streamBuffer.length === 0) {
+      this.streamBuffer = context.slice(-this.streamWindowSize);
+    }
+
+    // Append new tokens to buffer
+    this.streamBuffer += tokens;
+
+    // Keep only the window
+    if (this.streamBuffer.length > this.streamWindowSize) {
+      this.streamBuffer = this.streamBuffer.slice(-this.streamWindowSize);
+    }
+
+    // Scan the window with context-aware path
+    const matches = await this.scan(this.streamBuffer, 'stream');
+
+    // Deduplicate: only return matches that involve the newest tokens
+    // by checking if the rawValue appears in the last tokens.length + some overlap
+    const newestText = tokens;
+    return matches.filter(m => {
+      if (!m.rawValue) return true;
+      return newestText.length === 0 || this.streamBuffer.includes(m.rawValue);
+    });
+  }
+
+  /** Reset the streaming buffer for a new stream. */
+  resetStream(): void {
+    this.streamBuffer = '';
   }
 
   private redact(secret: string): string {

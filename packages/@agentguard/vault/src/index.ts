@@ -30,12 +30,12 @@ export abstract class BaseVaultAdapter implements VaultAdapter {
     this.secretKey = secretKey || randomBytes(32).toString('hex');
   }
 
-  abstract write(secret: string, options?: VaultWriteOptions): Promise<string>;
-  abstract read(id: string, agentId?: string): Promise<string | null>;
+  abstract write(_secret: string, _options?: VaultWriteOptions): Promise<string>;
+  abstract read(id: string, _agentId?: string): Promise<string | null>;
   abstract list(): Promise<string[]>;
   abstract delete(id: string): Promise<boolean>;
 
-  generateRef(id: string, secret: string, ttl: number = 3600000): string {
+  generateRef(id: string, _secret: string, ttl: number = 3600000): string {
     const expiry = Date.now() + ttl;
     const dataToSign = `${id}:${expiry}`;
     const hmac = createHmac('sha256', this.secretKey).update(dataToSign).digest('hex');
@@ -47,6 +47,7 @@ export abstract class BaseVaultAdapter implements VaultAdapter {
     if (parts.length !== 5 || parts[0] !== 'vault' || parts[1] !== 'v1') return false;
     
     const [,, id, hmac, expiryStr] = parts;
+    if (!id || !hmac || !expiryStr) return false;
     const expiry = parseInt(expiryStr, 10);
     
     if (expiry < Date.now()) return false;
@@ -59,11 +60,11 @@ export abstract class BaseVaultAdapter implements VaultAdapter {
 }
 
 export class InMemoryVaultAdapter extends BaseVaultAdapter {
-  private store = new Map<string, { value: string; options?: VaultWriteOptions }>();
+  private store = new Map<string, { value: string; options?: VaultWriteOptions; createdAt: number }>();
 
   async write(secret: string, options?: VaultWriteOptions): Promise<string> {
     const id = `vault_${randomBytes(8).toString('hex')}`;
-    this.store.set(id, { value: secret, options });
+    this.store.set(id, { value: secret, options, createdAt: Date.now() });
     return id;
   }
 
@@ -71,8 +72,8 @@ export class InMemoryVaultAdapter extends BaseVaultAdapter {
     const entry = this.store.get(id);
     if (!entry) return null;
     
-    // Check TTL
-    if (entry.options?.ttl && entry.options.ttl < Date.now()) {
+    // Check TTL (ttl is relative milliseconds from creation)
+    if (entry.options?.ttl && entry.createdAt + entry.options.ttl < Date.now()) {
       this.store.delete(id);
       return null;
     }

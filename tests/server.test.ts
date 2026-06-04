@@ -1,0 +1,86 @@
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createApp } from '@agentguard/server';
+import { createServer, AddressInfo } from 'net';
+import http from 'http';
+
+function startTestServer(app: any): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(0, '127.0.0.1', () => {
+      const addr = server.address() as AddressInfo;
+      resolve(`http://127.0.0.1:${addr.port}`);
+    });
+    server.on('error', reject);
+  });
+}
+
+let baseUrl: string;
+let server: http.Server;
+
+describe('Server API', () => {
+  beforeAll(async () => {
+    const app = createApp();
+    const srv = app.listen(0, '127.0.0.1', () => {
+      const addr = srv.address() as AddressInfo;
+      baseUrl = `http://127.0.0.1:${addr.port}`;
+      server = srv;
+    });
+    await new Promise(r => srv.on('listening', r));
+  });
+
+  afterAll(() => {
+    server?.close();
+  });
+
+  it('GET /health returns status', async () => {
+    const res = await fetch(`${baseUrl}/health`);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.status).toBe('ok');
+    expect(body.version).toBe('2.0.0');
+  });
+
+  it('POST /checkpoint validates request body', async () => {
+    const res = await fetch(`${baseUrl}/checkpoint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe('Invalid request body');
+  });
+
+  it('POST /checkpoint scans and returns clean state', async () => {
+    const res = await fetch(`${baseUrl}/checkpoint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: { key: 'sk-123456789012345678901234567890123456789012345678' },
+      }),
+    });
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.cleanState.key).toMatch(/^vault:v1:/);
+  });
+
+  it('POST /checkpoint passes clean state through', async () => {
+    const res = await fetch(`${baseUrl}/checkpoint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: { message: 'hello' } }),
+    });
+    const body = await res.json();
+    expect(body.cleanState.message).toBe('hello');
+  });
+
+  it('GET /health includes x402 status', async () => {
+    const res = await fetch(`${baseUrl}/health`);
+    const body = await res.json();
+    expect(body).toHaveProperty('x402');
+  });
+
+  it('returns 404 for unknown routes', async () => {
+    const res = await fetch(`${baseUrl}/unknown`);
+    expect(res.status).toBe(404);
+  });
+});

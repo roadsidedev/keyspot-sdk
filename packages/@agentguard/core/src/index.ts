@@ -1,18 +1,49 @@
 import { Scanner, ScannerOptions, Match } from './scanner.js';
 import { TaintEngine } from './taint.js';
-import { VaultAdapter, InMemoryVaultAdapter } from '../vault/index.js';
+import { VaultAdapter, InMemoryVaultAdapter, VaultWriteOptions } from '@agentguard/vault';
 import { PromptShield, AuditLogger, PromptShieldRule } from './security.js';
 
 export interface AgentGuardConfig extends ScannerOptions {
   vault?: VaultAdapter;
   workerPool?: { size: number };
   onSecretFound?: (match: Match) => Promise<void>;
+  rotationHook?: (match: Match) => Promise<string | null>;
   promptShield?: { enabled: boolean; rules?: PromptShieldRule[] };
   hosted?: {
     enabled: boolean;
     agentWalletAddress?: string;
     facilitatorUrl?: string;
   };
+}
+
+const PATH_SEVERITY: Record<string, number> = {
+  config: 1.0,
+  secret: 1.0,
+  token: 1.0,
+  key: 1.0,
+  password: 1.0,
+  credential: 1.0,
+  env: 0.9,
+  github: 0.8,
+  ci: 0.8,
+  log: 0.5,
+  debug: 0.5,
+  history: 0.4,
+  message: 0.3,
+  chat: 0.3,
+  memory: 0.3,
+};
+
+function contextualConfidence(path: string, baseConfidence: number): number {
+  const parts = path.toLowerCase().split(/[.\[\]_/-]+/);
+  for (const part of parts) {
+    const boost = PATH_SEVERITY[part];
+    if (boost) {
+      return Math.min(1.0, baseConfidence + (boost - 0.5) * 0.3);
+    }
+  }
+  // Default: slightly reduce for unknown paths
+  return Math.max(0.5, baseConfidence - 0.1);
 }
 
 export class AgentGuard {
@@ -22,6 +53,7 @@ export class AgentGuard {
   private promptShield?: PromptShield;
   private auditLogger: AuditLogger;
   private onSecretFound?: (match: Match) => Promise<void>;
+  private rotationHook?: (match: Match) => Promise<string | null>;
 
   constructor(private config: AgentGuardConfig = {}) {
     this.taintEngine = new TaintEngine();
@@ -29,6 +61,7 @@ export class AgentGuard {
     this.vault = config.vault || new InMemoryVaultAdapter();
     this.auditLogger = new AuditLogger();
     this.onSecretFound = config.onSecretFound;
+    this.rotationHook = config.rotationHook;
 
     if (config.promptShield?.enabled) {
       this.promptShield = new PromptShield(config.promptShield.rules);
@@ -36,9 +69,8 @@ export class AgentGuard {
   }
 
   private async checkHostedAccess(): Promise<boolean> {
-    // In production, this would call the facilitatorUrl
     console.log(`[Hosted] Checking access for ${this.config.hosted?.agentWalletAddress}`);
-    return true; // Mocked for now
+    return true;
   }
 
   async scan(data: any): Promise<Match[]> {
@@ -50,7 +82,6 @@ export class AgentGuard {
   }
 
   async checkpoint(state: any): Promise<any> {
-    // x402 Check for hosted version
     if (this.config.hosted?.enabled) {
       const hasAccess = await this.checkHostedAccess();
       if (!hasAccess) {
@@ -58,12 +89,9 @@ export class AgentGuard {
       }
     }
 
-    // Audit log the checkpoint start
     this.auditLogger.log({ type: 'checkpoint_start', stateSummary: typeof state });
 
     const matches = await this.scan(state);
-    
-    // Deep clone state to avoid mutating original
     const cleanState = JSON.parse(JSON.stringify(state));
 
     if (matches.length > 0) {
@@ -73,15 +101,28 @@ export class AgentGuard {
         }
 
         if (match.rawValue) {
-          const vaultId = await this.vault.write(match.rawValue, {
+          const vaultOptions: VaultWriteOptions = {
             tags: { type: match.type, path: match.path }
-          });
-          
-          // Construct cryptographic vault reference
-          const vaultRef = this.vault.generateRef(vaultId, match.rawValue);
+          };
+
+          let secretToStore = match.rawValue;
+
+          if (this.rotationHook) {
+            const rotated = await this.rotationHook(match);
+            if (rotated) {
+              secretToStore = rotated;
+              vaultOptions.tags = { ...vaultOptions.tags, rotated: 'true' };
+            }
+          }
+
+          const vaultId = await this.vault.write(secretToStore, vaultOptions);
+          const vaultRef = this.vault.generateRef(vaultId, secretToStore);
+
+          this.taintEngine.tag(vaultRef, match.secretId!, 'vault_ref');
+          this.taintEngine.tag(secretToStore, match.secretId!, 'vault');
+
           this.replaceAtPath(cleanState, match.path, vaultRef);
-          
-          this.auditLogger.log({ type: 'secret_vaulted', secretId: match.secretId, vaultId });
+          this.auditLogger.log({ type: 'secret_vaulted', secretId: match.secretId, vaultId, path: match.path });
         } else if (match.type === 'tainted_content') {
           this.replaceAtPath(cleanState, match.path, '[REDACTED TAINTED CONTENT]');
           this.auditLogger.log({ type: 'taint_redacted', path: match.path });
@@ -95,24 +136,21 @@ export class AgentGuard {
 
   async validatePrompt(prompt: string): Promise<{ blocked: boolean; findings: string[] }> {
     if (!this.promptShield) return { blocked: false, findings: [] };
-    
     const result = await this.promptShield.analyze(prompt);
     this.auditLogger.log({ type: 'prompt_validation', promptSummary: prompt.substring(0, 50), ...result });
-    
     return result;
   }
 
   private replaceAtPath(obj: any, path: string, value: any) {
     if (!path) return;
-    
     const parts = path.split(/[.\[\]]+/).filter(Boolean);
     let current = obj;
-    
     for (let i = 0; i < parts.length - 1; i++) {
-      current = current[parts[i]];
+      const key = parts[i] as string;
+      current = current[key];
     }
-    
-    current[parts[parts.length - 1]] = value;
+    const lastKey = parts[parts.length - 1] as string;
+    current[lastKey] = value;
   }
 
   async wrap<T>(fn: (...args: any[]) => Promise<T>, state: any): Promise<T> {
