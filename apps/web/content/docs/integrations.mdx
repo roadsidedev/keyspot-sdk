@@ -1,0 +1,38 @@
+---
+title: Framework Integrations
+description: Wrap popular AI frameworks with KeySpot
+---
+
+# Framework Integrations
+
+## LangChain
+
+```typescript
+import { withAgentGuard } from '@roadsidelab/keyspot-adapters/langchain';
+
+const guardedChain = withAgentGuard(myChain, guard);
+```
+
+## Anthropic
+
+```typescript
+import { wrapAnthropic } from '@roadsidelab/keyspot-adapters/anthropic';
+
+const client = wrapAnthropic(anthropic, guard);
+```
+
+## OpenAI
+
+```typescript
+import { wrapOpenAI } from '@roadsidelab/keyspot-adapters/openai';
+
+const client = wrapOpenAI(openai, guard);
+```
+
+## Express Middleware
+
+```typescript
+import { keyspotMiddleware } from '@roadsidelab/keyspot-server';
+
+app.use(keyspotMiddleware(guard));
+```

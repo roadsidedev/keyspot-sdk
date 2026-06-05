@@ -1,0 +1,56 @@
+---
+title: Core Concepts
+description: Understanding checkpoints, taint tracking, and vault references
+---
+
+# Core Concepts
+
+## Checkpoint
+
+A **checkpoint** is any point where agent state is about to be persisted, summarized, or passed to another system. Examples:
+
+- Before/after LLM calls
+- Tool execution boundaries
+- Memory save points
+- Agent-to-agent handoff
+- Session end / context compression
+
+## Taint Tracking
+
+When a secret is detected, the field is marked as **tainted**. Any value derived from a tainted field (summaries, embeddings, rewrites) is also tracked.
+
+This prevents "paraphrased secret" leaks that simple regex scanners miss.
+
+## Vault Reference
+
+Instead of the original secret, KeySpot returns a signed reference:
+
+```
+vault:v1:<vault_id>:<hmac>:<expiry>
+```
+
+The reference is:
+
+- **Opaque** — reveals nothing about the secret
+- **Signed** — HMAC prevents tampering
+- **Expirable** — optional TTL per reference
+
+## PromptShield
+
+PromptShield runs an additional scan on the final prompt before it is sent to the model. This catches secrets that were introduced during reasoning or tool use.
+
+## Audit Logger
+
+Every checkpoint produces a minimal audit record:
+
+```json
+{
+  "checkpoint": "llm_call",
+  "status": "SUCCESS",
+  "secretsFound": 2,
+  "taintedFields": 3,
+  "timestamp": 1717500000000
+}
+```
+
+No secret values are ever logged.

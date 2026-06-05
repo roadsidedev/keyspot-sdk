@@ -1,0 +1,46 @@
+---
+title: Overview
+description: Runtime security layer for autonomous AI agents
+---
+
+# KeySpot SDK
+
+**Runtime credential hygiene for autonomous AI agents.**
+
+KeySpot SDK enforces a **Checkpoint → Scan → Taint → Vault → Replace → Continue** lifecycle at every critical boundary. Secrets never persist in agent memory — they are replaced with HMAC-signed vault references.
+
+## Core Principle
+
+> An agent should never hold a secret longer than it needs to.
+
+When a secret is detected during a checkpoint, it is immediately written to your chosen vault and replaced with a reference token. The agent continues operating with clean state.
+
+## What KeySpot Catches
+
+| Category              | Examples                                      |
+|-----------------------|-----------------------------------------------|
+| Crypto private keys   | Ethereum, Solana, Bitcoin WIF, BIP-32 xpriv   |
+| Seed phrases          | BIP-39 (12/24 words) with entropy validation  |
+| AI provider keys      | OpenAI, Anthropic, HuggingFace                |
+| Cloud credentials     | AWS, GCP, Azure service accounts              |
+| Source control        | GitHub, GitLab, npm tokens                    |
+| Payment processors    | Stripe secret + restricted keys               |
+| Databases             | PostgreSQL, MySQL, MongoDB, Redis             |
+| Auth tokens           | JWTs, Bearer tokens, high-entropy tokens      |
+
+## Architecture
+
+KeySpot runs security checks in isolated worker threads so your main agent loop is never blocked. Every secret match is:
+
+1. Written to your vault adapter
+2. Replaced with a signed reference
+3. Logged for audit (outcome only)
+
+This gives you **zero-knowledge execution** while maintaining full compliance and observability.
+
+## Next Steps
+
+- [Installation](/doc/installation)
+- [Quick Start](/doc/quick-start)
+- [Core Concepts](/doc/concepts)
+- [API Reference](/doc/api-reference)

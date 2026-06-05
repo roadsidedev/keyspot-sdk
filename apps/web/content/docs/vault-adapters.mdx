@@ -1,0 +1,57 @@
+---
+title: Vault Adapters
+description: Store secrets in different backends
+---
+
+# Vault Adapters
+
+## In-Memory (default for testing)
+
+```typescript
+import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
+
+const vault = new InMemoryVaultAdapter();
+```
+
+## Environment Variables
+
+```typescript
+import { EnvVaultAdapter } from '@roadsidelab/keyspot-vault';
+
+const vault = new EnvVaultAdapter({
+  prefix: 'KEYSPOT_'
+});
+```
+
+## Dotenv Files
+
+```typescript
+import { DotEnvVaultAdapter } from '@roadsidelab/keyspot-vault';
+
+const vault = new DotEnvVaultAdapter({
+  path: '.env.vault'
+});
+```
+
+## HashiCorp Vault
+
+```typescript
+import { HashiCorpVaultAdapter } from '@roadsidelab/keyspot-vault';
+
+const vault = new HashiCorpVaultAdapter({
+  address: 'https://vault.company.com',
+  token: process.env.VAULT_TOKEN,
+  namespace: 'keyspot'
+});
+```
+
+## AWS Secrets Manager
+
+```typescript
+import { AWSSecretsAdapter } from '@roadsidelab/keyspot-vault';
+
+const vault = new AWSSecretsAdapter({
+  region: 'us-east-1',
+  prefix: 'keyspot/'
+});
+```

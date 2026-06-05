@@ -1,0 +1,49 @@
+---
+title: Quick Start
+description: Get started with KeySpot in under 5 minutes
+---
+
+# Quick Start
+
+```typescript
+import { KeySpot } from '@roadsidelab/keyspot-core';
+import { EnvVaultAdapter } from '@roadsidelab/keyspot-vault';
+
+const guard = new KeySpot({
+  vault: new EnvVaultAdapter(),
+  taintEnabled: true,
+  promptShield: { enabled: true }
+});
+
+// Before any agent step or tool call
+const cleanState = await guard.checkpoint({
+  user: 'alice',
+  config: {
+    openaiKey: 'sk-1234567890abcdef1234567890abcdef'
+  }
+});
+
+// cleanState.config.openaiKey is now a vault reference:
+// "vault:v1:vault_abc123:abcd1234...:1717500000000"
+```
+
+## Wrap Agent Execution
+
+```typescript
+const result = await guard.wrap(async (state) => {
+  return await llm.generate(state);
+}, initialState);
+```
+
+## CLI Usage
+
+```bash
+# Scan a directory for secrets
+npx @roadsidelab/keyspot-cli scan ./src
+
+# Auto-redact secrets in place
+npx @roadsidelab/keyspot-cli scan ./config --prune
+
+# Install pre-commit hook
+npx @roadsidelab/keyspot-cli install
+```

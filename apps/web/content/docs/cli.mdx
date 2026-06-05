@@ -1,0 +1,33 @@
+---
+title: CLI
+description: Command line tools for scanning and automation
+---
+
+# CLI
+
+## Installation
+
+```bash
+npm install -D @roadsidelab/keyspot-cli
+```
+
+## Commands
+
+### `keyspot scan`
+
+Scan files or directories for secrets.
+
+```bash
+keyspot scan ./src
+keyspot scan ./config --prune          # Auto-redact in place
+keyspot scan . --git                  # Only scan git-tracked files
+keyspot scan ./src --json > report.json
+```
+
+### `keyspot install`
+
+Install a pre-commit hook that runs `keyspot scan --git`.
+
+```bash
+keyspot install
+```

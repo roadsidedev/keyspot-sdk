@@ -1,0 +1,10 @@
+{
+  "index": "Overview",
+  "installation": "Installation",
+  "quick-start": "Quick Start",
+  "concepts": "Core Concepts",
+  "api-reference": "API Reference",
+  "vault-adapters": "Vault Adapters",
+  "integrations": "Framework Integrations",
+  "cli": "CLI"
+}
