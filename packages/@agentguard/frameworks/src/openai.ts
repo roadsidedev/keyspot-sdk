@@ -1,4 +1,4 @@
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 type OpenAIChatParams = {
   messages: Array<{ role: string; content: string }>;

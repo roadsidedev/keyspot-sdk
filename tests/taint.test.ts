@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TaintEngine } from '@agentguard/core/taint';
+import { TaintEngine } from '@roadsidelab/keyspot-core/taint';
 
 describe('TaintEngine', () => {
   it('tags a value and retrieves its taints', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "@agentguard/frameworks",
+  "name": "@roadsidelab/keyspot-frameworks",
   "version": "2.0.0",
   "description": "Framework wrappers — LangChain, Anthropic, OpenAI — auto-scan agent outputs through AgentGuard",
   "type": "module",
@@ -37,10 +37,13 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@agentguard/core": "workspace:*"
+    "@roadsidelab/keyspot-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

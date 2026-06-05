@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ConsoleTracer, AgentGuardTracer, noopTracer, setGlobalTracer, getGlobalTracer } from '@agentguard/core/telemetry';
-import { AgentGuard } from '@agentguard/core';
+import { ConsoleTracer, AgentGuardTracer, noopTracer, setGlobalTracer, getGlobalTracer } from '@roadsidelab/keyspot-core/telemetry';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 describe('Telemetry (Tracer)', () => {
   it('noopTracer returns a span without throwing', () => {

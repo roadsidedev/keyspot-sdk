@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { writeFileSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 describe('CLI', () => {
   const testDir = join(tmpdir(), `agentguard-cli-test-${Date.now()}`);

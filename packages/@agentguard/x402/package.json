@@ -1,5 +1,5 @@
 {
-  "name": "@agentguard/x402",
+  "name": "@roadsidelab/keyspot-x402",
   "version": "2.0.0",
   "description": "x402 agent-native micropayment protocol — Base chain real verification, ERC-8004 identity",
   "type": "module",
@@ -23,6 +23,9 @@
     "typescript": "^5.0.0"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/roadsidedev/secret-shieldv1",

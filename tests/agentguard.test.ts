@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 describe('AgentGuard (Integration)', () => {
   it('performs a full checkpoint cycle', async () => {

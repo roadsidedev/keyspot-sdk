@@ -1,4 +1,4 @@
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 type AnthropicMessageCreateParams = {
   messages: Array<{ role: string; content: string | Array<any> }>;

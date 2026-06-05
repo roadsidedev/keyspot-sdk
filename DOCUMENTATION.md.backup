@@ -1,0 +1,1180 @@
+# AgentGuard SDK — Developer Documentation
+
+> **Runtime credential hygiene for autonomous AI agents.**
+> Open source · MIT License · Node 20+ · TypeScript 5+
+
+---
+
+## Table of Contents
+
+1. [Introduction](#1-introduction)
+2. [Installation](#2-installation)
+3. [Quick Start](#3-quick-start)
+4. [Core Concepts](#4-core-concepts)
+5. [AgentGuard Client — API Reference](#5-agentguard-client--api-reference)
+6. [Scanner](#6-scanner)
+7. [Taint Engine](#7-taint-engine)
+8. [PromptShield](#8-promptshield)
+9. [Checkpoint System](#9-checkpoint-system)
+10. [Vault Adapters](#10-vault-adapters)
+11. [Audit Logger](#11-audit-logger)
+12. [Framework Integrations](#12-framework-integrations)
+13. [Vector Store Adapters](#13-vector-store-adapters)
+14. [CLI](#14-cli)
+15. [Pricing & Deployment](#15-pricing--deployment)
+16. [Ephemeral Core — Security Architecture](#16-ephemeral-core--security-architecture)
+17. [Threat Model](#17-threat-model)
+18. [Responsible Disclosure](#18-responsible-disclosure)
+
+---
+
+## 1. Introduction
+
+AgentGuard is an open-source security middleware for multi-agent AI systems. It automatically detects, prunes, and vaults exposed credentials — API keys, private keys, seed phrases, database URLs — from agent memory at every critical boundary.
+
+The core principle is simple: **an agent should never hold a secret longer than it needs to.** When a secret is detected, it is written to a secure vault and replaced with a reference token. The agent continues operating. The secret is gone from context.
+
+### How it works
+
+```
+1. Checkpoint fires    → At a session boundary, memory save, or tool call
+2. Isolated scan       → Fresh Worker thread scans state against 50+ patterns
+3. Vault write         → Every matched secret is written to your vault adapter
+4. State sanitised     → Clean state returned; Worker terminates immediately
+5. Audit logged        → Outcome only: SUCCESS / FAILED / ERROR — nothing else
+```
+
+### What AgentGuard catches
+
+| Category | Examples |
+|---|---|
+| Crypto private keys | Ethereum/EVM keys, Solana keypairs, Bitcoin WIF, BIP-32 xpriv |
+| Seed phrases | BIP-39 (12 and 24 word), with entropy validation |
+| AI provider keys | OpenAI, Anthropic, HuggingFace |
+| Cloud credentials | AWS access keys, GCP service accounts, Azure client secrets |
+| Source control | GitHub (classic, fine-grained, OAuth), GitLab PATs, npm tokens |
+| Payment processors | Stripe secret + restricted keys |
+| Databases | PostgreSQL, MySQL, MongoDB, Redis connection strings |
+| Certificates | PEM private keys (RSA, EC, Ed25519, OpenSSH) |
+| Auth tokens | JWTs, Bearer tokens, generic high-entropy tokens |
+| Tainted derivations | Summaries or embeddings derived from any of the above |
+
+---
+
+## 2. Installation
+
+AgentGuard is published as scoped packages under `@agentguard`. Install only what you need.
+
+### Minimum install
+
+For most use cases you only need the core package and a vault adapter:
+
+```bash
+# pnpm
+pnpm add @agentguard/core @agentguard/vault
+
+# npm
+npm install @agentguard/core @agentguard/vault
+
+# yarn
+yarn add @agentguard/core @agentguard/vault
+```
+
+### Full install
+
+```bash
+pnpm add @agentguard/core @agentguard/vault @agentguard/adapters @agentguard/x402 @agentguard/server
+pnpm add -D @agentguard/cli
+```
+
+### Package overview
+
+| Package | Description | Required |
+|---|---|---|
+| `@agentguard/core` | Scanner, Taint Engine, PromptShield, EphemeralPruner, CheckpointManager, AuditLogger, AgentGuard client | ✅ |
+| `@agentguard/vault` | Vault adapters: env, dotenv, HashiCorp, AWS, InMemory | ✅ |
+| `@agentguard/patterns` | Built-in pattern registry (bundled with core — install separately to extend) | optional |
+| `@agentguard/adapters` | Framework bridges: Anthropic, OpenAI, LangChain, Express | optional |
+| `@agentguard/x402` | x402 payment middleware (server) and agent client | optional |
+| `@agentguard/server` | REST API server for hosted or self-hosted deployments | optional |
+| `@agentguard/cli` | `agentguard scan`, `agentguard install` — install as dev dependency | dev |
+
+### Requirements
+
+> ⚠️ **Node.js 20 or later is required.**
+> AgentGuard uses `worker_threads`, `structuredClone`, and native `fetch` — all stable from Node 20.
+> Running on an older version will throw at import time.
+
+TypeScript 5.0+ is recommended. All packages ship full `.d.ts` declarations with source maps.
+
+---
+
+## 3. Quick Start
+
+### Basic usage
+
+```typescript
+import { AgentGuard } from '@agentguard/core';
+import { EnvVaultAdapter } from '@agentguard/vault';
+
+const guard = new AgentGuard({
+  vault: new EnvVaultAdapter(),
+});
+
+// Agent state that may contain exposed credentials
+const agentState = {
+  user: 'alice',
+  config: { openai_key: 'sk-proj-abc123...' },
+  messages: [
+    { role: 'user', content: 'My AWS key is AKIAIOSFODNN7EXAMPLE' },
+  ],
+};
+
+// Wrap your agent call — state is automatically sanitised on the way out
+const { result, cleanState } = await guard.wrap(
+  async (state) => myAgentLogic(state),
+  agentState,
+);
+
+console.log(cleanState);
+// {
+//   user: 'alice',
+//   config: { openai_key: '[REDACTED_BY_AGENTGUARD]' },
+//   messages: [{ role: 'user', content: '[REDACTED_BY_AGENTGUARD]' }]
+// }
+```
+
+### Manual checkpoint
+
+If you manage your own agent loop, trigger a checkpoint at any point:
+
+```typescript
+const cleanState = await guard.checkpoint('MEMORY_SAVE', agentState);
+// Secrets pruned, audit entry logged, clean state returned
+```
+
+### Dry run — scan without pruning
+
+Check what would be detected without modifying anything:
+
+```typescript
+const result = await guard.scan(agentState);
+
+console.log(result.found);           // true
+console.log(result.matches.length);  // 2
+
+// ⚠️ Do NOT log result.matches in production — it contains raw secret values
+```
+
+### Enable PromptShield
+
+Validate incoming prompts before passing them to your LLM:
+
+```typescript
+const guard = new AgentGuard({
+  vault: new EnvVaultAdapter(),
+  promptShield: { enabled: true },
+});
+
+const { blocked, reason, ruleId } = await guard.validatePrompt(userInput);
+
+if (blocked) {
+  throw new Error(`Security violation [${ruleId}]: ${reason}`);
+}
+```
+
+---
+
+## 4. Core Concepts
+
+### 4.1 Prune strategies
+
+When a secret is found, AgentGuard applies one of three strategies to the clean state it returns:
+
+| Strategy | Behaviour | Use when |
+|---|---|---|
+| `REDACT` | Replaces the secret with `[REDACTED_BY_AGENTGUARD]` | Default. Safe for debugging — the field still exists. |
+| `REMOVE` | Deletes the field entirely | You want the cleanest possible output and the field is non-essential. |
+| `REPLACE` | Writes secret to vault, injects a reference token back | **Recommended for production.** Agent can resolve the token when it genuinely needs the value. |
+
+```typescript
+// REPLACE strategy example
+// Before pruning:
+{ openai_key: 'sk-proj-abc123...' }
+
+// After pruning:
+{ openai_key: '{{vault:openai_key_a3f9b2}}' }
+
+// Resolve later when the agent actually needs it:
+const value = await guard.vault.resolve('{{vault:openai_key_a3f9b2}}');
+```
+
+### 4.2 Checkpoint triggers
+
+Checkpoints are the moments when a scan-prune-vault cycle fires. You configure which events trigger them:
+
+| Trigger | When it fires |
+|---|---|
+| `SESSION_END` | After the agent conversation loop ends |
+| `MEMORY_SAVE` | Before writing to a vector store or database |
+| `TOOL_CALL_COMPLETE` | After each tool invocation returns |
+| `MESSAGE_BOUNDARY` | Between each agent message turn |
+| `INTERVAL` | On a time interval, every N milliseconds |
+| `CUSTOM` | Any event you emit from your own code |
+
+### 4.3 Ephemeral isolation
+
+Every prune cycle runs inside a fresh Node.js Worker thread. The parent process never receives raw secret values — only the sanitised state and an outcome code. The Worker terminates immediately after posting its result. See [Section 16](#16-ephemeral-core--security-architecture) for full detail.
+
+### 4.4 Taint tracking
+
+Secrets that are paraphrased or embedded into derived content are also tracked. If an agent summarises a message containing an API key, that summary is *tainted* — AgentGuard propagates the tag to all derived content and prunes it at the next checkpoint.
+
+---
+
+## 5. AgentGuard Client — API Reference
+
+```typescript
+import { AgentGuard } from '@agentguard/core';
+
+const guard = new AgentGuard(options);
+```
+
+### Constructor options
+
+```typescript
+interface AgentGuardOptions {
+  // Required
+  vault: VaultAdapter;
+
+  // Pruning
+  prune?: {
+    strategy?: 'REDACT' | 'REMOVE' | 'REPLACE';  // default: 'REDACT'
+    redactWith?: string;                            // default: '[REDACTED_BY_AGENTGUARD]'
+    isolate?: boolean;                              // default: true  — use Worker threads
+    workerTimeoutMs?: number;                       // default: 10000 — ms before Worker is force-killed
+  };
+
+  // Taint tracking
+  taintEnabled?: boolean;  // default: false
+
+  // PromptShield
+  promptShield?: {
+    enabled: boolean;       // default: false
+    rules?: string[];       // which rule IDs to activate; default: all 18
+  };
+
+  // Checkpoints
+  checkpoints?: CheckpointDefinition[];
+
+  // Audit
+  audit?: {
+    schema?: 'OUTCOME_ONLY' | 'BINARY';  // default: 'OUTCOME_ONLY'
+    console?: boolean;                    // default: true (false in test env)
+    filePath?: string;                    // append JSONL to file
+    webhookUrl?: string;                  // POST each entry here
+    webhookSecret?: string;               // HMAC-SHA256 signing key for webhook
+  };
+
+  // Hook for monitoring integrations
+  onPruneComplete?: (result: PruneResult) => void | Promise<void>;
+}
+```
+
+### Methods
+
+#### `guard.wrap(fn, state, tag?)`
+
+Wraps an agent function. Executes it, then fires a `SESSION_END` checkpoint on the state before returning.
+
+```typescript
+const { result, cleanState } = await guard.wrap(
+  async (state) => myAgentLogic(state),
+  agentState,
+  'optional-tag',
+);
+```
+
+**Returns:** `{ result: T, cleanState: unknown }`
+
+---
+
+#### `guard.checkpoint(name, state, tag?)`
+
+Manually trigger a named checkpoint. Returns the sanitised state.
+
+```typescript
+const cleanState = await guard.checkpoint('MEMORY_SAVE', agentState);
+```
+
+**Returns:** `unknown` (the sanitised state)
+
+---
+
+#### `guard.scan(input)`
+
+Scan without pruning. Does not modify state, does not write to vault.
+
+```typescript
+const { found, matches, scannedAt, nodesVisited } = await guard.scan(agentState);
+```
+
+**Returns:** `ScanResult`
+
+> ⚠️ `matches[n].value` contains the raw secret. Never log this in production.
+
+---
+
+#### `guard.prune(state, tag?)`
+
+Run a full prune cycle directly, bypassing the checkpoint system.
+
+```typescript
+const { outcome, secretCount, cleanState, durationMs, error } = await guard.prune(agentState);
+```
+
+**Returns:** `PruneResult`
+
+---
+
+#### `guard.validatePrompt(prompt)`
+
+Run PromptShield against an incoming prompt string. Call this before passing user input to your LLM.
+
+```typescript
+const { blocked, reason, ruleId, severity } = await guard.validatePrompt(userInput);
+
+if (blocked) {
+  return { error: 'Prompt blocked by security policy' };
+}
+```
+
+**Returns:** `{ blocked: boolean, reason?: string, ruleId?: string, severity?: string }`
+
+---
+
+#### `guard.getTaintEngine()`
+
+Access the taint tracking engine directly.
+
+```typescript
+const taint = guard.getTaintEngine();
+
+taint.tag(derivedContent, 'vault:ref_abc', 'source_type');
+taint.isTainted(someString); // boolean
+taint.clear();
+```
+
+---
+
+## 6. Scanner
+
+The scanner is the detection engine. It recursively traverses agent state, applies pattern matching, and returns structured matches.
+
+```typescript
+import { Scanner } from '@agentguard/core';
+
+const scanner = new Scanner({
+  deepScan: true,        // recurse into nested objects and arrays (default: true)
+  includeBase64: true,   // attempt to detect base64-encoded secrets (default: true)
+  maxDepth: 20,          // max recursion depth (default: 20)
+  registry,              // optional: custom PatternRegistry
+});
+
+const result = await scanner.scan(agentState);
+```
+
+### ScanResult shape
+
+```typescript
+interface ScanResult {
+  found: boolean;
+  matches: ScanMatch[];
+  scannedAt: Date;
+  nodesVisited: number;
+}
+
+interface ScanMatch {
+  patternId: string;   // e.g. 'ethereum_private_key'
+  type: SecretType;    // e.g. 'private_key'
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  value: string;       // ⚠️ raw secret — never log or persist
+  path: string;        // dot-notation path: 'messages[2].content'
+  redacted: string;    // safe preview: '0xac09••••••••b2f1'
+  entropy: number;     // Shannon entropy (bits)
+  confidence: number;  // 0–1
+}
+```
+
+### Custom patterns
+
+```typescript
+import { PatternRegistry } from '@agentguard/patterns';
+
+const registry = PatternRegistry.createDefault();
+
+registry.register({
+  id: 'my_internal_token',
+  name: 'Internal Service Token',
+  type: 'api_key',
+  severity: 'high',
+  pattern: /\bINT_[A-Za-z0-9]{32}\b/g,
+  validate: (match) => match.startsWith('INT_'),
+  minEntropy: 120,
+});
+
+const guard = new AgentGuard({ vault, scanner: { registry } });
+```
+
+---
+
+## 7. Taint Engine
+
+The Taint Engine tracks how secrets propagate through an agent's work — into summaries, embeddings, and other derived content — and ensures those derivations are pruned too.
+
+### Enabling
+
+```typescript
+const guard = new AgentGuard({
+  vault: new EnvVaultAdapter(),
+  taintEnabled: true,
+});
+```
+
+### Tagging derived content
+
+```typescript
+const taint = guard.getTaintEngine();
+
+// After an LLM summarises a conversation that contained secrets:
+const summary = await llm.summarise(conversationWithSecrets);
+
+taint.tag(summary, 'vault:ref_openai_key_abc', 'llm_summary');
+
+// Now any agent state containing `summary` will be caught at checkpoint
+const cleanState = await guard.checkpoint('SESSION_END', { summary, otherData });
+// summary is pruned even though it contains no raw key
+```
+
+### How taint propagates
+
+| Operation | Taint behaviour |
+|---|---|
+| Direct copy | Taint propagates automatically via structural equality |
+| LLM summary | Tag manually after the LLM call using `taint.tag()` |
+| Vector embedding | Tag the embedding vector using `taint.tag()` |
+| Tool call output | Detected automatically if the raw secret appears verbatim |
+
+---
+
+## 8. PromptShield
+
+PromptShield detects adversarial inputs before they reach your LLM. It runs 18 built-in rules covering prompt injection, data exfiltration, jailbreak attempts, and indirect injection via tool results.
+
+### Enabling
+
+```typescript
+const guard = new AgentGuard({
+  vault: new EnvVaultAdapter(),
+  promptShield: {
+    enabled: true,
+    // Optionally restrict to specific rule IDs:
+    rules: ['prompt_injection_ignore_previous', 'exfiltration_via_url'],
+  },
+});
+```
+
+### Validating a prompt
+
+```typescript
+const { blocked, reason, ruleId, severity } = await guard.validatePrompt(userInput);
+
+// blocked: true | false
+// reason:   human-readable explanation if blocked
+// ruleId:   which rule triggered, e.g. 'prompt_injection_ignore_previous'
+// severity: 'critical' | 'high' | 'medium'
+```
+
+### Validating tool call results
+
+Tool call outputs are a common indirect injection vector. Validate them before appending to the message history:
+
+```typescript
+const toolResult = await myTool.run(args);
+
+const { blocked } = await guard.validatePrompt(JSON.stringify(toolResult));
+
+if (blocked) {
+  throw new Error('Tool result flagged as potentially adversarial');
+}
+```
+
+### Built-in rules (18 total)
+
+| Rule ID | Category | Severity |
+|---|---|---|
+| `prompt_injection_ignore_previous` | Prompt injection | critical |
+| `prompt_injection_new_instructions` | Prompt injection | critical |
+| `exfiltration_via_url` | Data exfiltration | high |
+| `exfiltration_via_image` | Data exfiltration | high |
+| `system_prompt_extraction` | Jailbreak | high |
+| `role_confusion_attack` | Jailbreak | high |
+| `indirect_injection_tool_result` | Indirect injection | high |
+| `indirect_injection_document` | Indirect injection | medium |
+| *(10 additional rules)* | Various | medium / low |
+
+---
+
+## 9. Checkpoint System
+
+Checkpoints are the trigger mechanism for scan-prune-vault cycles. Register them at startup or fire them manually.
+
+### Registering checkpoints
+
+```typescript
+const guard = new AgentGuard({
+  vault,
+  checkpoints: [
+    { name: 'SESSION_END' },
+    { name: 'MEMORY_SAVE', intercept: true },   // blocks the write until pruning completes
+    { name: 'TOOL_CALL_COMPLETE' },
+    { name: 'INTERVAL', intervalMs: 30_000 },
+  ],
+});
+```
+
+### Manual trigger
+
+```typescript
+// Fire any named checkpoint on demand
+const cleanState = await guard.checkpoint('MEMORY_SAVE', agentState, 'optional-tag');
+```
+
+### Custom checkpoint
+
+Register an arbitrary event name and fire it from your own agent events:
+
+```typescript
+guard.checkpoints.register({ name: 'before-vector-upsert', intercept: true });
+
+// In your agent loop:
+const cleanState = await guard.checkpoint('before-vector-upsert', stateToUpsert);
+await vectorStore.upsert(cleanState);
+```
+
+### Interval checkpoints
+
+```typescript
+guard.checkpoints.register({ name: 'INTERVAL', intervalMs: 60_000 });
+
+// Provide a state getter/setter so intervals can clean state automatically
+guard.checkpoints.startIntervals(
+  () => agentState,
+  (clean) => { agentState = clean; },
+);
+
+// On agent shutdown:
+guard.checkpoints.stopIntervals();
+```
+
+---
+
+## 10. Vault Adapters
+
+Vault adapters store secrets after AgentGuard prunes them from agent state. All adapters implement the same `VaultAdapter` interface.
+
+### VaultAdapter interface
+
+```typescript
+interface VaultAdapter {
+  readonly name: string;
+  write(key: string, value: string, meta?: SecretMeta): Promise<VaultRef>;
+  read(ref: VaultRef):                                  Promise<string>;
+  list():                                               Promise<VaultRef[]>;
+  delete(ref: VaultRef):                                Promise<void>;
+}
+
+interface VaultRef {
+  key: string;       // unique key in the vault
+  adapter: string;   // which adapter stored this
+  storedAt: string;  // ISO 8601 timestamp
+}
+
+interface SecretMeta {
+  tags?: Record<string, string>;  // organisational tags
+  ttlSeconds?: number;             // auto-expire (adapters that support it)
+}
+```
+
+### EnvVaultAdapter
+
+Writes secrets to `process.env` at runtime. Zero-config. Best for local dev.
+
+```typescript
+import { EnvVaultAdapter } from '@agentguard/vault';
+
+const vault = new EnvVaultAdapter();
+
+// Secrets are stored as AGENTGUARD_<UPPERCASED_KEY>
+// e.g. process.env.AGENTGUARD_OPENAI_KEY
+```
+
+### DotEnvVaultAdapter
+
+Appends to a `.env` file on disk. Handles deduplication. Throws if the file is not gitignored.
+
+```typescript
+import { DotEnvVaultAdapter } from '@agentguard/vault';
+
+const vault = new DotEnvVaultAdapter({
+  path: './.env.agentguard',  // default
+  checkGitignore: true,        // default — throws if not gitignored
+});
+```
+
+> ⚠️ Never commit your vault file. `DotEnvVaultAdapter` enforces this by default.
+
+### InMemoryVaultAdapter
+
+Ephemeral in-process storage. Data is lost on exit. Testing and sandboxed environments only.
+
+```typescript
+import { InMemoryVaultAdapter } from '@agentguard/vault';
+
+const vault = new InMemoryVaultAdapter();
+
+// Wipe all entries securely on shutdown
+vault.wipe();
+```
+
+### HashiCorpVaultAdapter
+
+Full HashiCorp Vault KV v2 integration. Requires `node-vault`.
+
+```typescript
+import { HashiCorpVaultAdapter } from '@agentguard/vault';
+
+const vault = new HashiCorpVaultAdapter({
+  endpoint:  process.env.HASHICORP_VAULT_ADDR,
+  token:     process.env.HASHICORP_VAULT_TOKEN,
+  mountPath: 'secret',       // KV mount path
+  namespace: 'agentguard',   // optional
+});
+```
+
+### AWSSecretsAdapter
+
+AWS Secrets Manager. Requires `@aws-sdk/client-secrets-manager`.
+
+```typescript
+import { AWSSecretsAdapter } from '@agentguard/vault';
+
+const vault = new AWSSecretsAdapter({
+  region: 'us-east-1',
+  prefix: 'agentguard/',
+  tags: { Project: 'AgentGuard', Env: 'prod' },
+});
+```
+
+### Custom vault adapter
+
+Implement `VaultAdapter` to use any backend:
+
+```typescript
+import type { VaultAdapter, VaultRef, SecretMeta } from '@agentguard/vault';
+
+export class MyVaultAdapter implements VaultAdapter {
+  readonly name = 'my-vault';
+
+  async write(key: string, value: string, meta?: SecretMeta): Promise<VaultRef> {
+    // NEVER log the value here
+    await myBackend.set(key, value);
+    return { key, adapter: this.name, storedAt: new Date().toISOString() };
+  }
+
+  async read(ref: VaultRef): Promise<string> {
+    return myBackend.get(ref.key);
+  }
+
+  async list(): Promise<VaultRef[]> {
+    const keys = await myBackend.keys();
+    return keys.map((key) => ({ key, adapter: this.name, storedAt: '' }));
+  }
+
+  async delete(ref: VaultRef): Promise<void> {
+    await myBackend.delete(ref.key);
+  }
+}
+```
+
+---
+
+## 11. Audit Logger
+
+The audit logger records the outcome of every prune cycle. By design, it never records anything about the secrets themselves.
+
+### What is logged
+
+```jsonc
+// Schema: OUTCOME_ONLY (default)
+{
+  "eventId":     "evt_01j9xabc...",
+  "timestamp":   "2026-06-04T12:00:00.000Z",
+  "outcome":     "SUCCESS",       // SUCCESS | FAILED | ERROR
+  "secretCount": 2,               // how many secrets were found — no types or paths
+  "durationMs":  6,
+  "tag":         "session-id-optional"
+}
+
+// Schema: BINARY (maximum privacy — not even a count)
+{
+  "eventId":   "evt_01j9xabc...",
+  "timestamp": "2026-06-04T12:00:00.000Z",
+  "outcome":   "SUCCESS"
+}
+```
+
+### Configuration
+
+```typescript
+const guard = new AgentGuard({
+  vault,
+  audit: {
+    schema: 'OUTCOME_ONLY',         // or 'BINARY'
+    console: true,                   // print to stdout (default: true, false in test env)
+    filePath: './audit.jsonl',       // append JSONL to file
+    webhookUrl: 'https://...',       // POST to webhook on every event
+    webhookSecret: process.env.WEBHOOK_SECRET,  // HMAC-SHA256 signing
+  },
+});
+```
+
+### Webhook payload
+
+Every webhook POST includes an `X-AgentGuard-Signature: sha256=<hmac>` header for verification on the receiving end.
+
+---
+
+## 12. Framework Integrations
+
+### Anthropic SDK
+
+Wrap your Anthropic client with `GuardedAnthropic`. Every `messages.create` call is scanned outbound and inbound, including tool call results.
+
+```typescript
+import Anthropic from '@anthropic-ai/sdk';
+import { AgentGuard } from '@agentguard/core';
+import { EnvVaultAdapter } from '@agentguard/vault';
+import { GuardedAnthropic } from '@agentguard/adapters/anthropic';
+
+const guard = new AgentGuard({
+  vault: new EnvVaultAdapter(),
+  prune: { strategy: 'REPLACE' },
+});
+
+const client = new GuardedAnthropic(new Anthropic(), guard);
+
+// Use exactly like the standard SDK
+const response = await client.messages.create({
+  model: 'claude-opus-4-6',
+  max_tokens: 1024,
+  messages: [{ role: 'user', content: userInput }],
+});
+
+// Any secrets in the response are pruned before your code sees them
+```
+
+### OpenAI SDK
+
+```typescript
+import OpenAI from 'openai';
+import { GuardedOpenAI } from '@agentguard/adapters/openai';
+
+const client = new GuardedOpenAI(new OpenAI(), guard);
+
+const response = await client.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: userInput }],
+});
+```
+
+### LangChain
+
+```typescript
+import { withAgentGuard } from '@agentguard/adapters/langchain';
+
+const safeChain = withAgentGuard(myChain, guard);
+
+// Runs the chain, then prunes the output state
+const result = await safeChain.invoke({ input: userInput });
+```
+
+### Express middleware
+
+Automatically scan request and response bodies on every agent API route:
+
+```typescript
+import express from 'express';
+import { agentGuardMiddleware } from '@agentguard/adapters/express';
+
+const app = express();
+app.use(express.json());
+app.use(agentGuardMiddleware(guard));
+
+// All req.body and res.json() payloads are now scanned
+```
+
+---
+
+## 13. Vector Store Adapters
+
+AgentGuard integrates with vector stores to intercept writes and prevent tainted or secret-containing embeddings from being persisted.
+
+Supported stores: **Pinecone**, **Chroma**, **Qdrant**, **Weaviate**, **LanceDB**, **Milvus**.
+
+```typescript
+import { GuardedPinecone } from '@agentguard/adapters/pinecone';
+
+const index = new GuardedPinecone(pineconeIndex, guard);
+
+// Upsert is intercepted — state is scanned and pruned before the write
+await index.upsert([{ id: 'doc-1', values: embedding, metadata: { text: chunk } }]);
+```
+
+The adapter fires a `MEMORY_SAVE` checkpoint before every upsert, blocking the write until the scan-prune cycle completes. This ensures no raw credentials enter your vector database.
+
+---
+
+## 14. CLI
+
+Install the CLI as a dev dependency:
+
+```bash
+pnpm add -D @agentguard/cli
+```
+
+### `agentguard scan`
+
+```bash
+# Scan a single file
+agentguard scan ./agent_memory.json
+
+# Scan a directory recursively
+agentguard scan ./logs --recursive
+
+# Scan and redact in place (writes the pruned version back to the file)
+agentguard scan ./agent_memory.json --prune
+
+# Output results as JSON (useful for CI)
+agentguard scan ./logs --json
+
+# Scan only git-staged files (for pre-commit hooks)
+agentguard scan --git
+```
+
+### `agentguard install`
+
+Installs a git pre-commit hook that runs `agentguard scan --git` before every commit:
+
+```bash
+agentguard install
+# ✅ Pre-commit hook installed at .git/hooks/pre-commit
+```
+
+The hook will block the commit if any staged file contains a secret and exit with a non-zero code so CI picks it up.
+
+### CI/CD — GitHub Actions
+
+Add this workflow to `.github/workflows/agentguard.yml`:
+
+```yaml
+name: AgentGuard Credential Scan
+
+on: [push, pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Scan for exposed credentials
+        run: pnpm agentguard scan . --recursive --json
+```
+
+---
+
+## 15. Pricing & Deployment
+
+AgentGuard offers two deployment paths. The feature set is identical — the difference is where the scan-prune cycles run and who pays for the infrastructure.
+
+---
+
+### 15.1 Self-Hosted — Free Forever
+
+Run AgentGuard on your own infrastructure. Open source, MIT licence, no call limits, no telemetry, no external dependencies.
+
+#### Library mode (recommended)
+
+The simplest path. No server required — AgentGuard runs in-process alongside your agent.
+
+```typescript
+import { AgentGuard } from '@agentguard/core';
+import { HashiCorpVaultAdapter } from '@agentguard/vault';
+
+const guard = new AgentGuard({
+  vault: new HashiCorpVaultAdapter({
+    endpoint: process.env.HASHICORP_VAULT_ADDR,
+    token:    process.env.HASHICORP_VAULT_TOKEN,
+  }),
+  prune:  { strategy: 'REPLACE' },
+  audit:  { filePath: './agentguard-audit.jsonl' },
+});
+```
+
+All scanning and pruning runs locally in Worker threads — nothing leaves your process.
+
+#### Self-hosted API server
+
+Run AgentGuard as a shared REST API for multiple agents or services in your fleet:
+
+```bash
+docker pull ghcr.io/agentguard/server:latest
+
+docker run -d \
+  --name agentguard \
+  -p 3000:3000 \
+  -e VAULT_ADAPTER=hashicorp \
+  -e HASHICORP_VAULT_ADDR=https://vault.internal \
+  -e HASHICORP_VAULT_TOKEN=<token> \
+  -e AGENTGUARD_PORT=3000 \
+  ghcr.io/agentguard/server:latest
+```
+
+Call it from agents in the same network:
+
+```typescript
+import { AgentGuardClient } from '@agentguard/server/client';
+
+const client = new AgentGuardClient({
+  baseUrl: 'http://agentguard.internal:3000',
+  // No payment config needed — self-hosted is always free
+});
+
+const cleanState = await client.checkpoint(agentState);
+```
+
+#### Environment variables (server mode)
+
+| Variable | Default | Description |
+|---|---|---|
+| `VAULT_ADAPTER` | `env` | `env \| dotenv \| hashicorp \| aws \| inmemory` |
+| `AGENTGUARD_PORT` | `3000` | Server bind port |
+| `AGENTGUARD_HOST` | `0.0.0.0` | Server bind address |
+| `HASHICORP_VAULT_ADDR` | — | HashiCorp Vault endpoint |
+| `HASHICORP_VAULT_TOKEN` | — | HashiCorp access token |
+| `AWS_REGION` | `us-east-1` | AWS Secrets Manager region |
+| `AWS_ACCESS_KEY_ID` | — | AWS credentials |
+| `AWS_SECRET_ACCESS_KEY` | — | AWS credentials |
+
+---
+
+### 15.2 Hosted API — x402 Micropayments
+
+The AgentGuard hosted API runs managed infrastructure. Agents pay per call using the **x402** HTTP payment standard — USDC on Base, fractions of a cent, no subscriptions, no billing accounts.
+
+#### Pricing
+
+| Operation | Price (USDC) | Description |
+|---|---|---|
+| `scan` | $0.00005 | Pattern detection only, no vault write |
+| `prune` | $0.0001 | Full scan + prune + vault write |
+| `checkpoint` | $0.0002 | Full checkpoint cycle with audit entry |
+
+> **First 100 calls are free** per agent wallet address — no sign-up required.
+
+#### What is x402?
+
+x402 reactivates the dormant HTTP `402 Payment Required` status code as a machine-readable micropayment protocol:
+
+```
+Agent                              AgentGuard API
+  │                                      │
+  ├── POST /v1/checkpoint ─────────────> │
+  │                                      │
+  │ <── 402 Payment Required ────────── │
+  │     X-Payment-Required: {            │
+  │       amount: "0.0002",              │
+  │       token: "USDC",                 │
+  │       network: "base",               │
+  │       payTo: "0x...",                │
+  │       nonce: "abc123"                │
+  │     }                                │
+  │                                      │
+  ├── [agent signs + pays on Base] ────> │
+  │                                      │
+  ├── POST /v1/checkpoint ─────────────> │
+  │     X-Payment: {                     │
+  │       txHash: "0x...",               │
+  │       signature: "0x..."             │
+  │     }                                │
+  │                                      │
+  │ <── 200 { cleanState: {...} } ───── │
+```
+
+The entire flow is handled transparently by the `x402AgentClient`. Your code makes one call.
+
+#### Agent-side setup
+
+```typescript
+import { x402AgentClient } from '@agentguard/x402';
+
+// Your agent's ERC-8004 onchain identity
+const agentSigner = {
+  address: '0xYourAgentWalletAddress',
+  sign: async (message) => yourWallet.signMessage(message),
+  chainId: 8453,  // Base mainnet
+};
+
+const client = x402AgentClient({
+  endpoint:     'https://api.agentguard.dev',
+  agentWallet:  agentSigner,
+  maxPriceUSDC: '0.001',  // Safety cap — reject if price exceeds this
+});
+
+// 402 → pay → retry is handled automatically under the hood
+const cleanState = await client.checkpoint(agentState);
+```
+
+#### ERC-8004 and autonomous payments
+
+ERC-8004 gives each AI agent its own verifiable onchain identity. AgentGuard uses this so agents pay for security calls autonomously — no human operator needs to top up a billing account.
+
+If your agents already carry ERC-8004 identity (e.g. on Buzz), they can call AgentGuard from the same wallet with no extra setup. Agents that earn revenue via x402 and spend on services via x402 operate in a fully closed-loop autonomous economy.
+
+#### Self-hosted vs hosted — comparison
+
+| | Self-Hosted | Hosted API (x402) |
+|---|---|---|
+| Cost | Free forever | ~$0.0001 per prune call |
+| Infrastructure | You run it | Managed for you |
+| Feature set | Identical | Identical |
+| Vault location | Your vault | Your vault (adapter still configured by you) |
+| Telemetry | None | None — audit log is yours only |
+| Free tier | Unlimited | 100 calls per agent wallet |
+| Suitable for | Production, regulated envs | Rapid prototyping, agent fleets |
+
+---
+
+## 16. Ephemeral Core — Security Architecture
+
+This section explains the internals of the pruning engine — the most sensitive component in AgentGuard.
+
+### The guarantee
+
+> The parent process — your application — **never receives raw secret values**. Secrets exist inside an isolated Worker thread for the minimum possible duration: scan → vault write → buffer zeroing → terminate. Nothing crosses the Worker boundary except the sanitised state and an outcome code.
+
+### Worker isolation — step by step
+
+```
+Parent Process                      Worker Thread (fresh for every call)
+─────────────────────────────────   ──────────────────────────────────────────
+agentState ──[structuredClone]────> state_copy (isolated, no shared references)
+                                          │
+                                    Scanner.scan(state_copy)
+                                          │
+                                    for each match:
+                                      vault.write(match.value)   ← vault call
+                                      match.value = ''            ← zero reference
+                                          │
+                                    applyRedactions(state_copy, matches)
+                                          │
+                                    parentPort.postMessage({      ← ONLY this crosses
+                                      outcome: 'SUCCESS',
+                                      secretCount: 2,
+                                      durationMs: 4,
+                                      cleanState: { ... }         ← no secrets
+                                    })
+                                          │
+                                    Worker.terminate()             ← process exits
+```
+
+### Buffer zeroing
+
+After vault write, AgentGuard makes a best-effort attempt to zero secret values:
+
+- Object references to match values are explicitly deleted
+- `scrubObject()` traverses the match record and sets all string fields to `''`
+- The Worker terminates immediately after posting, preventing V8 from including the value in any subsequent GC cycle
+
+> **Note:** JavaScript strings are immutable primitives — they cannot be truly zeroed from the V8 heap by application code. The Worker termination is the primary isolation mechanism. For consumers who require stronger in-memory guarantees (e.g. operating directly on raw key material), use `Uint8Array` or `Buffer` and call `zeroBytes()` immediately after vault write.
+
+### Audit schema — what is never logged
+
+The following are **never** recorded in the audit log, regardless of configuration:
+
+- Secret values (raw or partially redacted)
+- Secret types or pattern IDs
+- Field paths where the secret was found
+- Agent session identifiers that could correlate events
+- Vault references
+
+The audit log records only: event ID, timestamp, outcome, secret count, and duration.
+
+---
+
+## 17. Threat Model
+
+| Status | Coverage | Description |
+|---|---|---|
+| ✅ In scope | Secrets in message content | Raw API keys, private keys, connection strings in agent messages |
+| ✅ In scope | Secrets in tool call results | Credentials returned by tools that access external systems |
+| ✅ In scope | Secrets in config objects | Credentials embedded in agent configuration passed through state |
+| ✅ In scope | Base64-encoded secrets | Encoded credentials in agent messages or tool outputs |
+| ✅ In scope | Tainted derivations | Summaries and embeddings derived from content that contained secrets |
+| ✅ In scope | Prompt injection | Adversarial instructions in user input or tool results (PromptShield) |
+| ✅ In scope | Data exfiltration attempts | Prompts designed to extract system prompt or agent memory |
+| ⚠️ Partial | Streaming responses | Windowed buffer scan. Very long streams require explicit chunked checkpointing |
+| ❌ Out of scope | Pre-existing disk persistence | Secrets already written to disk or DB before AgentGuard was initialised |
+| ❌ Out of scope | OS-level memory inspection | V8 heap dumps or `/proc/mem` reads by a privileged host attacker |
+| ❌ Out of scope | Process startup environment | Secrets already in `process.env` at startup are not rescanned |
+| ❌ Out of scope | Compiled binary secrets | Hardcoded credentials in compiled application bundles |
+
+---
+
+## 18. Responsible Disclosure
+
+> ⚠️ If you discover a security vulnerability in AgentGuard, **do not open a public GitHub issue.**
+
+### How to report
+
+Email **security@agentguard.dev** with:
+
+- A description of the vulnerability
+- Steps to reproduce
+- The potential impact
+- Your suggested severity (`critical / high / medium / low`)
+- Your preferred attribution (name, handle, or anonymous)
+
+PGP key available at `https://agentguard.dev/.well-known/pgp-key.txt`.
+
+### Response timeline
+
+| Milestone | Target |
+|---|---|
+| Acknowledgement | Within 48 hours |
+| Initial triage | Within 5 business days |
+| Patch + CVE coordination | ≤30 days (critical), ≤90 days (others) |
+| Public disclosure | Coordinated with reporter |
+
+We ask that you give us reasonable time to patch before public disclosure. Reporters are credited in release notes unless they prefer to remain anonymous. We do not pursue legal action against good-faith researchers.
+
+---
+
+*AgentGuard is MIT licensed. © 2026 AgentGuard Contributors.*

@@ -1,4 +1,4 @@
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 /**
  * Wraps a LangChain Runnable to scan outputs through AgentGuard.

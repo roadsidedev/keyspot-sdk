@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AuditLogger } from '@agentguard/core/security';
+import { AuditLogger } from '@roadsidelab/keyspot-core/security';
 
 describe('AuditLogger', () => {
   it('logs events and returns an entry with hash', () => {

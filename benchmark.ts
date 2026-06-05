@@ -5,8 +5,8 @@
  *
  * Usage: node dist/benchmark.js [--iterations 100]
  */
-import { AgentGuard } from '@agentguard/core';
-import { builtInPatterns } from '@agentguard/patterns';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { builtInPatterns } from '@roadsidelab/keyspot-patterns';
 
 const iterations = parseInt(process.argv[2] || '100', 10);
 

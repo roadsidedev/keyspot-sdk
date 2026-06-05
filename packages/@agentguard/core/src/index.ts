@@ -1,6 +1,6 @@
 import { Scanner, ScannerOptions, Match } from './scanner.js';
 import { TaintEngine } from './taint.js';
-import { VaultAdapter, InMemoryVaultAdapter, VaultWriteOptions } from '@agentguard/vault';
+import { VaultAdapter, InMemoryVaultAdapter, VaultWriteOptions } from '@roadsidelab/keyspot-vault';
 import { PromptShield, AuditLogger, PromptShieldRule } from './security.js';
 import { AgentGuardTracer, Tracer, OtelTracer } from './telemetry.js';
 import { VectorStoreAdapter, BaseVectorStoreAdapter } from './adapters.js';

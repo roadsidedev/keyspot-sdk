@@ -1,4 +1,4 @@
-import { Pattern, builtInPatterns } from '@agentguard/patterns';
+import { Pattern, builtInPatterns } from '@roadsidelab/keyspot-patterns';
 import { TaintEngine } from './taint.js';
 
 export interface Match {

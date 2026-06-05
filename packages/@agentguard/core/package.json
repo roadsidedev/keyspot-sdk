@@ -1,5 +1,5 @@
 {
-  "name": "@agentguard/core",
+  "name": "@roadsidelab/keyspot-core",
   "version": "2.0.0",
   "description": "Runtime security core for autonomous AI agents — Scanner, TaintEngine, Vault, PromptShield, AuditLogger",
   "type": "module",
@@ -45,9 +45,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@agentguard/patterns": "workspace:*",
-    "@agentguard/vault": "workspace:*",
-    "@agentguard/adapters": "workspace:*"
+    "@roadsidelab/keyspot-patterns": "workspace:*",
+    "@roadsidelab/keyspot-vault": "workspace:*",
+    "@roadsidelab/keyspot-adapters": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
@@ -58,7 +58,10 @@
     "url": "https://github.com/roadsidedev/secret-shieldv1",
     "directory": "packages/@agentguard/core"
   },
-  "keywords": ["agentguard", "ai-security", "secret-scanner", "taint-tracking", "vault"],
+  "keywords": ["keyspot", "ai-security", "secret-scanner", "taint-tracking", "vault"],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18.0.0"
   }

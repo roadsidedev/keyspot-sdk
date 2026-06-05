@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AgentGuard, PrunerStrategy, CheckpointTrigger } from '@agentguard/core';
-import { InMemoryVaultAdapter } from '@agentguard/vault';
-import { BaseVectorStoreAdapter } from '@agentguard/core/adapters';
+import { AgentGuard, PrunerStrategy, CheckpointTrigger } from '@roadsidelab/keyspot-core';
+import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
+import { BaseVectorStoreAdapter } from '@roadsidelab/keyspot-core/adapters';
 
 describe('PRD Gap: PrunerStrategy', () => {
   it('VAULT_WITH_TAINT is the default and vaults secrets', async () => {

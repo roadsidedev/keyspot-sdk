@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { AgentGuard } from '@agentguard/core';
-import { builtInPatterns } from '@agentguard/patterns';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { builtInPatterns } from '@roadsidelab/keyspot-patterns';
 
 interface ScanOptions {
   path: string;
@@ -82,8 +82,8 @@ function installHook(): void {
 
   const hookPath = join(hookDir, 'pre-commit');
   const hookContent = `#!/bin/sh
-# AgentGuard pre-commit hook — scans staged files for secrets
-exec npx @agentguard/cli scan --git
+# KeySpot SDK pre-commit hook — scans staged files for secrets
+exec npx @roadsidelab/keyspot-cli scan --git
 `;
 
   writeFileSync(hookPath, hookContent, 'utf-8');
@@ -91,12 +91,12 @@ exec npx @agentguard/cli scan --git
 }
 
 async function printHelp(): Promise<void> {
-  console.log(`AgentGuard v2.0.0 — Runtime security for AI agents
+  console.log(`KeySpot SDK v2.0.0 — Runtime security for AI agents
 
 USAGE
-  agentguard scan <path>     Scan files for secrets
-  agentguard install         Install pre-commit hook
-  agentguard --version       Show version
+  keyspot scan <path>     Scan files for secrets
+  keyspot install         Install pre-commit hook
+  keyspot --version       Show version
 
 OPTIONS
   --git        Scan only files changed in the last commit (for pre-commit)

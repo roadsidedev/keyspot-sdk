@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { X402Facilitator } from '@agentguard/x402';
+import { X402Facilitator } from '@roadsidelab/keyspot-x402';
 
 describe('x402 Payment Protocol', () => {
   const PAY_TO = '0x1234567890AbcdEF1234567890aBcdef12345678';

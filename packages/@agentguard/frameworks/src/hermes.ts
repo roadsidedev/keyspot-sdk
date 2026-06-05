@@ -1,4 +1,4 @@
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 /**
  * Represents a Hermes agent interface.

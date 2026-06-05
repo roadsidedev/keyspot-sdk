@@ -1,5 +1,5 @@
 {
-  "name": "@agentguard/server",
+  "name": "@roadsidelab/keyspot-server",
   "version": "2.0.0",
   "description": "AgentGuard HTTP server with rate limiting, auth, and x402 payment support",
   "type": "module",
@@ -18,8 +18,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@agentguard/core": "workspace:*",
-    "@agentguard/x402": "workspace:*",
+"@roadsidelab/keyspot-core": "workspace:*",
+      "@roadsidelab/keyspot-x402": "workspace:*",
     "express": "^4.18.0",
     "express-rate-limit": "^7.0.0",
     "helmet": "^7.0.0",
@@ -32,6 +32,9 @@
     "typescript": "^5.0.0"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/roadsidedev/secret-shieldv1",

@@ -1,4 +1,4 @@
-import { AgentGuard } from '@agentguard/core';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
 
 async function test() {
   const guard = new AgentGuard({

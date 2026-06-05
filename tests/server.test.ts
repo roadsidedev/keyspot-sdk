@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createApp } from '@agentguard/server';
+import { createApp } from '@roadsidelab/keyspot-server';
 import { createServer, AddressInfo } from 'net';
 import http from 'http';
 import { MetricsRegistry, metrics } from '../packages/@agentguard/server/src/metrics.js';

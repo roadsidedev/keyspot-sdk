@@ -3,8 +3,8 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
-import { AgentGuard } from '@agentguard/core';
-import { X402Facilitator } from '@agentguard/x402';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { X402Facilitator } from '@roadsidelab/keyspot-x402';
 import { MetricsRegistry, metricsMiddleware, metricsHandler } from './metrics.js';
 
 // ── Schema Validation ────────────────────────────────────────────

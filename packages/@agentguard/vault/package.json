@@ -1,5 +1,5 @@
 {
-  "name": "@agentguard/vault",
+  "name": "@roadsidelab/keyspot-vault",
   "version": "2.0.0",
   "description": "Pluggable secret storage with cryptographic vault references, TTL, ACLs, and rotation hooks",
   "type": "module",
@@ -27,6 +27,9 @@
     "typescript": "^5.0.0"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/roadsidedev/secret-shieldv1",

@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AgentGuard } from '@agentguard/core';
-import { ChromaAdapter } from '@agentguard/adapters/chroma';
-import { PineconeAdapter } from '@agentguard/adapters/pinecone';
-import { QdrantAdapter } from '@agentguard/adapters/qdrant';
-import { WeaviateAdapter } from '@agentguard/adapters/weaviate';
-import { LanceDBAdapter } from '@agentguard/adapters/lancedb';
-import { MilvusAdapter } from '@agentguard/adapters/milvus';
-import { BaseVectorStoreAdapter } from '@agentguard/adapters';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { ChromaAdapter } from '@roadsidelab/keyspot-adapters/chroma';
+import { PineconeAdapter } from '@roadsidelab/keyspot-adapters/pinecone';
+import { QdrantAdapter } from '@roadsidelab/keyspot-adapters/qdrant';
+import { WeaviateAdapter } from '@roadsidelab/keyspot-adapters/weaviate';
+import { LanceDBAdapter } from '@roadsidelab/keyspot-adapters/lancedb';
+import { MilvusAdapter } from '@roadsidelab/keyspot-adapters/milvus';
+import { BaseVectorStoreAdapter } from '@roadsidelab/keyspot-adapters';
 
 describe('Vector Store Adapters', () => {
   describe('ChromaAdapter', () => {

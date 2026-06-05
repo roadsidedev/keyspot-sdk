@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { AgentGuard } from '@agentguard/core';
-import { TaintEngine } from '@agentguard/core/taint';
-import { Scanner } from '@agentguard/core/scanner';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { TaintEngine } from '@roadsidelab/keyspot-core/taint';
+import { Scanner } from '@roadsidelab/keyspot-core/scanner';
 
 describe('Phase 2: Core Hardening', () => {
   // 2.4 Rotation Hooks

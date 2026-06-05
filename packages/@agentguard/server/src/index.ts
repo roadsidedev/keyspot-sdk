@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createApp } from './app.js';
-import { AgentGuard } from '@agentguard/core';
-import { X402Facilitator } from '@agentguard/x402';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { X402Facilitator } from '@roadsidelab/keyspot-x402';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 

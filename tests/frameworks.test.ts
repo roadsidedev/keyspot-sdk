@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AgentGuard } from '@agentguard/core';
-import { withAgentGuard, wrapAnthropic, wrapOpenAI, wrapOpenClawAgent, wrapHermesAgent } from '@agentguard/frameworks';
+import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { withAgentGuard, wrapAnthropic, wrapOpenAI, wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-frameworks';
 
 describe('Framework Wrappers', () => {
   describe('withAgentGuard (LangChain)', () => {
