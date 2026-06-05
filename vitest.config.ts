@@ -9,9 +9,10 @@ export default defineConfig({
       '@agentguard/patterns': path.resolve(__dirname, 'packages/@agentguard/patterns/src'),
       '@agentguard/adapters': path.resolve(__dirname, 'packages/@agentguard/adapters/src'),
       '@agentguard/x402': path.resolve(__dirname, 'packages/@agentguard/x402/src'),
-      '@agentguard/server': path.resolve(__dirname, 'packages/@agentguard/server/src'),
+      '@agentguard/server': path.resolve(__dirname, 'packages/@agentguard/server/src/app.ts'),
       '@agentguard/frameworks': path.resolve(__dirname, 'packages/@agentguard/frameworks/src'),
       '@agentguard/cli': path.resolve(__dirname, 'packages/@agentguard/cli/src'),
+      '@agentguard/server/metrics': path.resolve(__dirname, 'packages/@agentguard/server/src/metrics.ts'),
     }
   },
   plugins: [

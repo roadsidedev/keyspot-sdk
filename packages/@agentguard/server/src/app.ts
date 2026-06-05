@@ -5,11 +5,12 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { AgentGuard } from '@agentguard/core';
 import { X402Facilitator } from '@agentguard/x402';
+import { MetricsRegistry, metricsMiddleware, metricsHandler } from './metrics.js';
 
 // ── Schema Validation ────────────────────────────────────────────
 
 const checkpointSchema = z.object({
-  state: z.any(),
+  state: z.record(z.any()).refine(v => v !== undefined, 'state is required'),
   agentWallet: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 });
 
@@ -78,6 +79,9 @@ export function createApp(config: AgentGuardServerConfig = {}): Express {
     message: { error: 'Too many auth attempts, please try again later.' },
   });
 
+  // Metrics middleware
+  app.use(metricsMiddleware);
+
   // Request logging
   app.use((req: Request, _res: Response, next: NextFunction) => {
     const start = Date.now();
@@ -98,6 +102,9 @@ export function createApp(config: AgentGuardServerConfig = {}): Express {
       x402: enableX402,
     });
   });
+
+  // Prometheus metrics
+  app.get('/metrics', metricsHandler);
 
   // Checkpoint
   app.post('/checkpoint', authLimiter, async (req: Request, res: Response) => {

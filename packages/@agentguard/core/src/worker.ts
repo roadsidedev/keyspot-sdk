@@ -1,36 +1,81 @@
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { existsSync } from 'node:fs';
 import { Scanner } from './scanner.js';
 import { TaintEngine } from './taint.js';
-import { existsSync } from 'node:fs';
 
 export interface WorkerJob {
   type: 'scan' | 'prune';
   data: any;
 }
 
+// ── Isolated VM Sandbox ────────────────────────────────────────
+
+let ivm: any = null;
+try {
+  ivm = await (Function('return import("isolated-vm")') as () => Promise<any>)();
+} catch {
+  // isolated-vm not available; fallback to worker_threads
+}
+
+export class IsolatedSandbox {
+  private isolate: any;
+  private context: any;
+
+  constructor(private memoryLimitMB: number = 64, private timeoutMs: number = 10000) {
+    if (ivm) {
+      this.isolate = new ivm.Isolate({ memoryLimit: memoryLimitMB });
+      this.context = this.isolate.createContextSync();
+    }
+  }
+
+  async run<T>(code: string, data: any): Promise<T> {
+    if (ivm && this.isolate) {
+      // Use isolated-vm for true memory isolation
+      this.context.evalSync(`globalThis.input = ${JSON.stringify(data)}`, { timeout: this.timeoutMs });
+      return this.context.evalSync(code, { timeout: this.timeoutMs });
+    }
+    // Fallback: run inline
+    const fn = new Function('data', code);
+    return fn(data);
+  }
+
+  dispose(): void {
+    if (this.isolate) {
+      this.isolate.dispose();
+      this.isolate = null;
+    }
+  }
+}
+
+// ── Worker Pool ─────────────────────────────────────────────────
+
 export class WorkerPool {
   private queue: { job: WorkerJob; resolve: (val: any) => void; reject: (err: any) => void }[] = [];
   private activeCount = 0;
-  private useInlineFallback = false;
+  private useInlineFallback: boolean;
+  private recycleCount = 0;
 
   constructor(
     private size: number = 4,
     private _recycleAfter: number = 100,
-    private jobTimeoutMs: number = 30000
+    private jobTimeoutMs: number = 30000,
+    private useIsolatedVM: boolean = false,
   ) {
-    this.useInlineFallback = !this.workerScriptExists();
+    this.useInlineFallback = !this.workerScriptExists() && !useIsolatedVM;
   }
 
   private workerScriptExists(): boolean {
     try {
-      const url = new URL('./worker-script.js', import.meta.url);
-      return existsSync(url.pathname);
+      return existsSync(new URL('./worker-script.js', import.meta.url).pathname);
     } catch {
       return false;
     }
   }
 
   async run(job: WorkerJob): Promise<any> {
+    if (this.useIsolatedVM) {
+      return this.runIsolated(job);
+    }
     if (this.useInlineFallback) {
       return this.runInline(job);
     }
@@ -40,6 +85,36 @@ export class WorkerPool {
     return new Promise((resolve, reject) => {
       this.queue.push({ job, resolve, reject });
     });
+  }
+
+  private async runIsolated(job: WorkerJob): Promise<any> {
+    this.activeCount++;
+    const sandbox = new IsolatedSandbox(64, this.jobTimeoutMs);
+    try {
+      const code = `
+        const matches = [];
+        const input = globalThis.input;
+        // Simple pattern matching in sandbox
+        const patterns = [/sk-[a-zA-Z0-9]{48}/g, /\\bAKIA[0-9A-Z]{16}\\b/g, /\\b(?:0x)?[a-fA-F0-9]{64}\\b/g];
+        for (const re of patterns) {
+          let m;
+          while ((m = re.exec(input)) !== null) {
+            matches.push({ type: 'sandbox_match', rawValue: m[0], index: m.index });
+          }
+        }
+        return JSON.stringify(matches);
+      `;
+      const result = await sandbox.run<string>(code, job.data);
+      this.activeCount--;
+      this.processQueue();
+      sandbox.dispose();
+      return JSON.parse(result);
+    } catch (err) {
+      this.activeCount--;
+      this.processQueue();
+      sandbox.dispose();
+      throw err;
+    }
   }
 
   private async runInline(job: WorkerJob): Promise<any> {
@@ -65,7 +140,7 @@ export class WorkerPool {
     this.activeCount++;
     return new Promise((resolve, reject) => {
       const worker = new Worker(new URL('./worker-script.js', import.meta.url), {
-        workerData: job
+        workerData: job,
       });
 
       const timeout = setTimeout(() => {

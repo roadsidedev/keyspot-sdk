@@ -29,6 +29,14 @@
     "./compliance": {
       "types": "./dist/compliance.d.ts",
       "import": "./dist/compliance.js"
+    },
+    "./adapters": {
+      "types": "./dist/adapters.d.ts",
+      "import": "./dist/adapters.js"
+    },
+    "./telemetry": {
+      "types": "./dist/telemetry.d.ts",
+      "import": "./dist/telemetry.js"
     }
   },
   "files": ["dist"],
@@ -38,7 +46,8 @@
   },
   "dependencies": {
     "@agentguard/patterns": "workspace:*",
-    "@agentguard/vault": "workspace:*"
+    "@agentguard/vault": "workspace:*",
+    "@agentguard/adapters": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

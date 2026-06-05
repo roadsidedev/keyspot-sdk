@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@agentguard/core": ["./packages/@agentguard/core/src"],
+      "@agentguard/core/*": ["./packages/@agentguard/core/src/*"],
+      "@agentguard/patterns": ["./packages/@agentguard/patterns/src"],
+      "@agentguard/vault": ["./packages/@agentguard/vault/src"],
+      "@agentguard/adapters": ["./packages/@agentguard/adapters/src"],
+      "@agentguard/adapters/*": ["./packages/@agentguard/adapters/src/*"],
+      "@agentguard/x402": ["./packages/@agentguard/x402/src"],
+      "@agentguard/server": ["./packages/@agentguard/server/src/app.ts"],
+      "@agentguard/server/*": ["./packages/@agentguard/server/src/*"],
+      "@agentguard/frameworks": ["./packages/@agentguard/frameworks/src"],
+      "@agentguard/cli": ["./packages/@agentguard/cli/src"],
+      "@agentguard/x402": ["./packages/@agentguard/x402/src"]
+    }
+  },
+  "exclude": ["**/*.test.ts", "**/tests/**", "benchmark.ts", "test-v2.ts", "vitest.config.ts"]
+}

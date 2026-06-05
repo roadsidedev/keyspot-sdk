@@ -18,11 +18,11 @@
 | 7. CLI & DevOps | ✅ Complete | 7 | 7/7 | Jun 4 |
 | 8. Server Hardening | ⬜ Not Started | 5 | 0/5 | — |
 | 9. Observability | ⬜ Not Started | 4 | 0/4 | — |
-| 10. Python SDK | ⬜ Not Started | 8 | 0/8 | — |
-| 11. Documentation | ⬜ Not Started | 5 | 0/5 | — |
+| 10. Python SDK | ✅ Complete | 8 | 8/8 | Jun 5 |
+| 11. Documentation | ✅ Complete | 5 | 5/5 | Jun 5 |
 | 12. Publish | ⬜ Not Started | 5 | 0/5 | — |
 
-**Overall: 43/83 tasks complete**
+**Overall: 56/83 tasks complete**
 
 ---
 
@@ -95,13 +95,24 @@
 
 - [ ] 9.1-9.4 OpenTelemetry, Prometheus, benchmarks
 
-## Phase 10: Python SDK ⬜
+## Phase 10: Python SDK ✅
 
-- [ ] 10.1-10.8 Full parity pyproject.toml, scanner, taint, vault, promptshield, tests
+- [x] 10.1 Python project scaffold (pyproject.toml, hatchling build, wheel config)
+- [x] 10.2 Python Scanner (40+ patterns, deep scan, recursive objects/arrays)
+- [x] 10.3 Python TaintEngine (tag, propagate, untaint, SHA-256 keys)
+- [x] 10.4 Python Vault (InMemoryVaultAdapter, HMAC refs, TTL, ACLs)
+- [x] 10.5 Python PromptShield (12 rules, case-insensitive, async)
+- [x] 10.6 Python AuditLogger (SHA-256 chain, tamper detection)
+- [x] 10.7 Python tests (20 pytest tests — taint, scanner, vault, audit, agentguard)
+- [x] 10.8 Python build config (hatchling, pyproject.toml)
 
-## Phase 11: Documentation ⬜
+## Phase 11: Documentation ✅
 
-- [ ] 11.1-11.5 Typedoc, API refs, README, CONTRIBUTING, CHANGELOG
+- [x] 11.1 Typedoc config + generated API docs (`docs/api/`)
+- [x] 11.2 API reference with workspace path mappings
+- [x] 11.3 README rewrite with real code examples for all 10 packages
+- [x] 11.4 CONTRIBUTING.md (setup, structure, standards, PR checklist)
+- [x] 11.5 CHANGELOG.md (2.0.0: all features documented)
 
 ## Phase 12: Publish ⬜
 

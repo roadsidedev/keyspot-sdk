@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createApp } from '@agentguard/server';
 import { createServer, AddressInfo } from 'net';
 import http from 'http';
+import { MetricsRegistry, metrics } from '../packages/@agentguard/server/src/metrics.js';
 
 function startTestServer(app: any): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -43,7 +44,7 @@ describe('Server API', () => {
     const res = await fetch(`${baseUrl}/checkpoint`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ state: null }), // null fails z.any() in older zod
     });
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -82,5 +83,42 @@ describe('Server API', () => {
   it('returns 404 for unknown routes', async () => {
     const res = await fetch(`${baseUrl}/unknown`);
     expect(res.status).toBe(404);
+  });
+
+  it('GET /metrics returns prometheus text', async () => {
+    const res = await fetch(`${baseUrl}/metrics`);
+    const text = await res.text();
+    expect(res.status).toBe(200);
+    expect(text).toContain('agentguard_');
+    expect(res.headers.get('Content-Type')).toContain('text/plain');
+  });
+});
+
+describe('Metrics Registry', () => {
+  it('counter increments', () => {
+    const r = new MetricsRegistry();
+    const c = r.counter('test_total', 'Test counter');
+    c.inc();
+    c.inc({ status: 'ok' });
+    const output = r.export();
+    expect(output).toContain('test_total 1');
+    expect(output).toContain('{status="ok"}');
+  });
+
+  it('histogram records observations', () => {
+    const r = new MetricsRegistry();
+    const h = r.histogram('test_duration_ms', 'Test duration');
+    h.observe(10);
+    h.observe(20);
+    const output = r.export();
+    expect(output).toContain('test_duration_ms_count');
+    expect(output).toContain('test_duration_ms_sum');
+  });
+
+  it('pre-defined metrics exist', () => {
+    expect(metrics.checkpointTotal).toBeDefined();
+    expect(metrics.httpRequestDuration).toBeDefined();
+    expect(metrics.secretsFound).toBeDefined();
+    expect(metrics.scanTotal).toBeDefined();
   });
 });
