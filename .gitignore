@@ -31,8 +31,7 @@ coverage/
 npm-debug.log*
 pnpm-debug.log*
 
-# Docker
-.dockerignore
+# No dockerignore entry — .dockerignore should be tracked
 
 # Python
 __pycache__/

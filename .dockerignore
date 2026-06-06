@@ -1,0 +1,47 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Frontend app (not needed for server)
+keyspot-sdk/
+
+# Tests & coverage
+tests/
+coverage/
+.nyc_output/
+
+# Documentation
+docs/
+*.md
+*.mdx
+
+# Python SDK (not needed for server)
+python/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build artifacts (will be rebuilt inside Docker)
+dist/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temp files
+tmp/
+temp/
+*.log
