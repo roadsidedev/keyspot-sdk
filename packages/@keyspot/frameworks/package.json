@@ -46,7 +46,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roadsidelab/keyspot-sdk",
+    "url": "https://github.com/roadsidedev/keyspot-sdk",
     "directory": "packages/@keyspot/frameworks"
   },
   "keywords": ["keyspot", "langchain", "anthropic", "openai", "agent-security"],

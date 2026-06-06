@@ -39,7 +39,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/roadsidelab/keyspot-sdk",
+    "url": "https://github.com/roadsidedev/keyspot-sdk",
     "directory": "packages/@keyspot/server"
   },
   "keywords": ["keyspot", "server", "api", "x402"],

@@ -60,7 +60,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/roadsidelab/keyspot-sdk",
+    "url": "https://github.com/roadsidedev/keyspot-sdk",
     "directory": "packages/@keyspot/adapters"
   },
   "keywords": ["keyspot", "vector-store", "chroma", "pinecone", "qdrant", "weaviate", "lancedb", "milvus"],

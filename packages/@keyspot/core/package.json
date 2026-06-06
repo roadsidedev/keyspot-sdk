@@ -56,7 +56,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roadsidelab/keyspot-sdk",
+    "url": "https://github.com/roadsidedev/keyspot-sdk",
     "directory": "packages/@keyspot/core"
   },
   "keywords": ["keyspot", "ai-security", "secret-scanner", "taint-tracking", "vault"],
