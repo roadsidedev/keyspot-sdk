@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { Copy, ExternalLink, Github, BookOpen, CreditCard } from "lucide-react";
+import { Copy, ExternalLink, GitBranch, BookOpen, CreditCard } from "lucide-react";
 
 export default function KeySpotLanding() {
   return (
@@ -96,7 +98,7 @@ export default function KeySpotLanding() {
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
           <div>MIT License • Open source</div>
           <a href="https://github.com/roadsidedev/keyspot-sdk" className="flex items-center gap-1.5 hover:text-zinc-700 dark:hover:text-zinc-300">
-            <Github className="h-3.5 w-3.5" /> roadsidedev/keyspot-sdk
+            <GitBranch className="h-3.5 w-3.5" /> roadsidedev/keyspot-sdk
           </a>
         </div>
       </footer>

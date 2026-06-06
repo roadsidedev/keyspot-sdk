@@ -1,12 +1,5 @@
 import nextra from 'nextra';
 
-const withNextra = nextra({
-  theme: 'nextra-theme-docs',
-  themeConfig: './theme.config.tsx',
-});
+const withNextra = nextra({});
 
-const nextConfig = withNextra({
-  // Add any Next.js config here
-});
-
-export default nextConfig;
+export default withNextra({});

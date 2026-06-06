@@ -47,8 +47,7 @@
   },
   "dependencies": {
     "@roadsidelab/keyspot-patterns": "workspace:*",
-    "@roadsidelab/keyspot-vault": "workspace:*",
-    "@roadsidelab/keyspot-adapters": "workspace:*"
+    "@roadsidelab/keyspot-vault": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

@@ -1,2 +1,3 @@
 packages:
   - 'packages/@keyspot/*'
+  - 'keyspot-sdk/apps/*'
