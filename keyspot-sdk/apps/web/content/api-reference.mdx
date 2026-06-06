@@ -1,0 +1,95 @@
+---
+title: API Reference
+description: Complete API documentation for KeySpot SDK
+---
+
+# API Reference
+
+## Constructor
+
+```typescript
+const guard = new KeySpot(options?: KeySpotOptions);
+```
+
+### Options
+
+All fields are optional:
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `vault` | `VaultAdapter` | `InMemoryVaultAdapter` | Vault backend for secret storage |
+| `prune.strategy` | `'REDACT' \| 'REMOVE' \| 'REPLACE'` | `'REDACT'` | How to handle detected secrets |
+| `prune.redactWith` | `string` | `'[REDACTED]'` | Replacement string for REDACT strategy |
+| `prune.isolate` | `boolean` | `true` | Run scans in isolated worker threads |
+| `prune.workerTimeoutMs` | `number` | `5000` | Timeout for worker thread execution |
+| `taintEnabled` | `boolean` | `false` | Enable taint tracking for derived secrets |
+| `promptShield.enabled` | `boolean` | `false` | Enable PromptShield jailbreak detection |
+| `promptShield.rules` | `string[]` | `undefined` | Specific rule IDs to enable (all if omitted) |
+| `checkpoints` | `CheckpointDefinition[]` | `[]` | Custom checkpoint triggers |
+| `onPruneComplete` | `(result: PruneResult) => void` | `undefined` | Callback after each prune cycle |
+
+## Methods
+
+### `checkpoint(state)`
+
+Scans the provided state object, vaults any detected secrets, and returns a clean copy. This is the primary entry point for most integrations.
+
+```typescript
+async checkpoint<T>(state: T): Promise<T>
+```
+
+**Example:**
+
+```typescript
+const clean = await guard.checkpoint(agentMemory);
+```
+
+### `wrap(fn, state?)`
+
+Wraps an async function. If `state` is provided, it is checkpointed before `fn` executes. The return value of `fn` is also checkpointed before being returned.
+
+```typescript
+async wrap<T, R>(
+  fn: (state: T) => Promise<R> | R,
+  state?: T
+): Promise<R>
+```
+
+**Example:**
+
+```typescript
+const result = await guard.wrap(async (state) => {
+  return await myAgent.run(state);
+}, initialState);
+```
+
+### `scan(input)`
+
+Runs the scanner against arbitrary input without checkpointing or pruning. Useful for inspection or testing.
+
+```typescript
+async scan(input: unknown): Promise<ScanResult>
+```
+
+### `validatePrompt(prompt)`
+
+Runs PromptShield rules against a user prompt. Returns `{ blocked: boolean, findings: string[] }`.
+
+```typescript
+async validatePrompt(prompt: string): Promise<PromptShieldResult>
+```
+
+### `getTaintEngine()`
+
+Returns the active `TaintEngine` instance for manual taint operations.
+
+```typescript
+getTaintEngine(): TaintEngine
+```
+
+**Example:**
+
+```typescript
+const taint = guard.getTaintEngine();
+taint.tag('derived from secret', 'ref_abc123', 'manual');
+```

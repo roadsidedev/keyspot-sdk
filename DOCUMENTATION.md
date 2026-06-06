@@ -7,25 +7,25 @@
 
 ## Table of Contents
 
-1. [Introduction](#1-introduction)
-2. [Installation](#2-installation)
-3. [Quick Start](#3-quick-start)
-4. [Core Concepts](#4-core-concepts)
-5. [KeySpot SDK Client — API Reference](#5-keyspot-client--api-reference)
-6. [Scanner](#6-scanner)
-7. [Taint Engine](#7-taint-engine)
-8. [PromptShield](#8-promptshield)
-9. [Checkpoint System](#9-checkpoint-system)
-10. [Vault Adapters](#10-vault-adapters)
-11. [Audit Logger](#11-audit-logger)
-12. [Framework Integrations](#12-framework-integrations)
-13. [Vector Store Adapters](#13-vector-store-adapters)
-14. [CLI](#14-cli)
-15. [Pricing & Deployment](#15-pricing--deployment)
-16. [Ephemeral Core — Security Architecture](#16-ephemeral-core--security-architecture)
-17. [Threat Model](#17-threat-model)
-18. [Responsible Disclosure](#18-responsible-disclosure)
-19. [Resources](#19-resources)
+- [1. Introduction](#1-introduction)
+- [2. Installation](#2-installation)
+- [3. Quick Start](#3-quick-start)
+- [4. Core Concepts](#4-core-concepts)
+- [5. API Reference](#5-keyspot-client--api-reference)
+- [6. Scanner](#6-scanner)
+- [7. Taint Engine](#7-taint-engine)
+- [8. PromptShield](#8-promptshield)
+- [9. Checkpoint System](#9-checkpoint-system)
+- [10. Vault Adapters](#10-vault-adapters)
+- [11. Audit Logger](#11-audit-logger)
+- [12. Framework Integrations](#12-framework-integrations)
+- [13. Vector Store Adapters](#13-vector-store-adapters)
+- [14. CLI](#14-cli)
+- [15. Pricing & Deployment](#15-pricing--deployment)
+- [16. Security Architecture](#16-ephemeral-core--security-architecture)
+- [17. Threat Model](#17-threat-model)
+- [18. Responsible Disclosure](#18-responsible-disclosure)
+- [19. Resources](#19-resources)
 
 ---
 
@@ -33,7 +33,7 @@
 
 KeySpot SDK is an open-source security middleware for multi-agent AI systems. It automatically detects, prunes, and vaults exposed credentials — API keys, private keys, seed phrases, database URLs — from agent memory at every critical boundary.
 
-The core principle is simple: **an agent should never hold a secret longer than it needs to.** When a secret is detected, it is written to a secure vault and replaced with a reference token. The agent continues operating. The secret is gone from context.
+**Core principle:** An agent should never hold a secret longer than it needs to.
 
 ### How it works
 
@@ -48,7 +48,7 @@ The core principle is simple: **an agent should never hold a secret longer than 
 ### What KeySpot SDK catches
 
 | Category | Examples |
-|---|---|
+|----------|----------|
 | Crypto private keys | Ethereum/EVM keys, Solana keypairs, Bitcoin WIF, BIP-32 xpriv |
 | Seed phrases | BIP-39 (12 and 24 word), with entropy validation |
 | AI provider keys | OpenAI, Anthropic, HuggingFace |
@@ -91,7 +91,7 @@ pnpm add -D @roadsidelab/keyspot-cli
 ### Package overview
 
 | Package | Description | Required |
-|---|---|---|
+|---------|-------------|----------|
 | `@roadsidelab/keyspot-core` | Scanner, Taint Engine, PromptShield, EphemeralPruner, CheckpointManager, AuditLogger, KeySpot SDK client | ✅ |
 | `@roadsidelab/keyspot-vault` | Vault adapters: env, dotenv, HashiCorp, AWS, InMemory | ✅ |
 | `@roadsidelab/keyspot-patterns` | Built-in pattern registry (bundled with core — install separately to extend) | optional |
@@ -102,17 +102,17 @@ pnpm add -D @roadsidelab/keyspot-cli
 
 ### Requirements
 
-- **Node.js**: 18.0.0 or later (see `package.json` engines field)
-- **TypeScript**: 5.0+ recommended for full type safety
+- **Node.js:** 18.0.0 or later
+- **TypeScript:** 5.0+ recommended for full type safety
 
 ---
 
 ## 3. Quick Start
 
 ```typescript
-import { KeySpot SDK } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   taintEnabled: true,
   promptShield: { enabled: true }
 });
@@ -143,7 +143,7 @@ const safeOutput = await guard.wrap(async (state) => {
 KeySpot SDK intercepts agent execution at well-defined boundaries called **checkpoints**:
 
 | Trigger | When it fires |
-|---|---|
+|---------|---------------|
 | `SESSION_END` | Agent session terminates |
 | `MEMORY_SAVE` | State is about to be persisted |
 | `TOOL_CALL_COMPLETE` | Tool execution finishes |
@@ -158,7 +158,7 @@ At each checkpoint, the current state is scanned, secrets are vaulted, and a cle
 When secrets are detected, KeySpot SDK applies one of three strategies:
 
 | Strategy | Behaviour |
-|---|---|
+|----------|-----------|
 | `REDACT` | Replace secret with `[REDACTED]` |
 | `REMOVE` | Delete the key entirely from the object |
 | `REPLACE` | Write to vault, replace with reference token |
@@ -185,18 +185,18 @@ This prevents "secret laundering" where an agent transforms a secret to evade de
 
 ---
 
-## 5. KeySpot SDK Client — API Reference
+## 5. KeySpot Client — API Reference
 
 ### Constructor
 
 ```typescript
-const guard = new KeySpot SDK(options?: KeySpot SDKOptions);
+const guard = new KeySpot(options?: KeySpotOptions);
 ```
 
 **Options interface** (all fields optional):
 
 | Option | Type | Default | Description |
-|---|---|---|---|
+|--------|------|---------|-------------|
 | `vault` | `VaultAdapter` | `InMemoryVaultAdapter` | Vault backend for secret storage |
 | `prune.strategy` | `'REDACT' \| 'REMOVE' \| 'REPLACE'` | `'REDACT'` | How to handle detected secrets |
 | `prune.redactWith` | `string` | `'[REDACTED]'` | Replacement string for REDACT strategy |
@@ -218,8 +218,6 @@ async checkpoint<T>(state: T): Promise<T>
 
 Scans the provided state object, vaults any detected secrets, and returns a clean copy. This is the primary entry point for most integrations.
 
-**Example:**
-
 ```typescript
 const clean = await guard.checkpoint(agentMemory);
 ```
@@ -234,8 +232,6 @@ async wrap<T, R>(
 ```
 
 Wraps an async function. If `state` is provided, it is checkpointed before `fn` executes. The return value of `fn` is also checkpointed before being returned.
-
-**Example:**
 
 ```typescript
 const result = await guard.wrap(async (state) => {
@@ -276,7 +272,7 @@ taint.tag('derived from secret', 'ref_abc123', 'manual');
 
 ## 6. Scanner
 
-The Scanner is the core detection engine. It uses a combination of:
+The Scanner is the core detection engine. It uses:
 
 - **Regex patterns** for structured secrets (API keys, connection strings)
 - **Entropy analysis** for high-randomness tokens
@@ -339,7 +335,7 @@ const clean = await guard.checkpoint({
 **Propagation rules:**
 
 | Operation | Taint behaviour |
-|---|---|
+|-----------|-----------------|
 | Direct assignment | Taint preserved |
 | String concatenation | Result is tainted if any operand is tainted |
 | JSON.parse/stringify | Taint metadata survives round-trip |
@@ -352,7 +348,7 @@ const clean = await guard.checkpoint({
 PromptShield detects jailbreak attempts and policy violations before prompts reach the LLM.
 
 ```typescript
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   promptShield: { enabled: true }
 });
 
@@ -386,7 +382,7 @@ Checkpoints are the integration points where KeySpot SDK intercepts agent state.
 ### Built-in Triggers
 
 | Name | Description |
-|---|---|
+|------|-------------|
 | `SESSION_END` | End of agent session |
 | `MEMORY_SAVE` | Before state persistence |
 | `TOOL_CALL_COMPLETE` | After tool execution |
@@ -395,7 +391,7 @@ Checkpoints are the integration points where KeySpot SDK intercepts agent state.
 ### Custom Checkpoints
 
 ```typescript
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   checkpoints: [
     { name: 'CUSTOM_EVENT', intercept: myCustomHook },
     { name: 'INTERVAL', intervalMs: 30000 }
@@ -429,7 +425,7 @@ Vault adapters provide the storage backend for secrets.
 import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
 
 const vault = new InMemoryVaultAdapter();
-const guard = new KeySpot SDK({ vault });
+const guard = new KeySpot({ vault });
 ```
 
 ### Environment Variables
@@ -481,7 +477,7 @@ const vault = new AWSSecretsAdapter({
 Vector store adapters intercept write operations to automatically vault secrets before they reach the database:
 
 | Store | Intercepted Method |
-|---|---|
+|-------|-------------------|
 | Chroma | `Collection.add` |
 | Pinecone | `Index.upsert` |
 | Qdrant | `client.upsert` |
@@ -497,8 +493,6 @@ const safeIndex = adapter.wrap(pineconeIndex);
 await safeIndex.upsert(records); // secrets vaulted automatically
 ```
 
-**Primitive wrapping:** Non-object values are wrapped in `{ _value }` for safe checkpointing.
-
 ---
 
 ## 11. Audit Logger
@@ -508,7 +502,7 @@ The Audit Logger records checkpoint outcomes without storing sensitive data.
 ### Console Logger (default)
 
 ```typescript
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   audit: { console: true }
 });
 ```
@@ -523,7 +517,7 @@ const logger = new FileAuditLogger({
   schema: 'OUTCOME_ONLY'
 });
 
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   audit: { logger }
 });
 ```
@@ -531,7 +525,7 @@ const guard = new KeySpot SDK({
 ### Webhook Logger
 
 ```typescript
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   audit: {
     webhookUrl: 'https://audit.example.com/hook',
     webhookSecret: process.env.AUDIT_SECRET
@@ -548,10 +542,10 @@ Audit entries include: timestamp, checkpoint trigger, outcome (SUCCESS/FAILED/ER
 ### LangChain
 
 ```typescript
-import { withKeySpot SDK } from '@roadsidelab/keyspot-frameworks';
+import { withKeySpot } from '@roadsidelab/keyspot-frameworks';
 import { guard } from './guard';
 
-const guardedChain = withKeySpot SDK(myChain, guard);
+const guardedChain = withKeySpot(myChain, guard);
 const result = await guardedChain.invoke({ input: '...' });
 ```
 
@@ -677,7 +671,7 @@ docker run -p 3000:3000 keyspot
 For usage-based billing on Base chain:
 
 ```typescript
-const guard = new KeySpot SDK({
+const guard = new KeySpot({
   hosted: {
     enabled: true,
     agentWalletAddress: '0xAgent...',
@@ -702,7 +696,7 @@ The x402 flow:
 
 ---
 
-## 16. Ephemeral Core — Security Architecture
+## 16. Security Architecture
 
 ### Worker Pool Isolation
 
@@ -727,7 +721,7 @@ After each scan, worker memory buffers are explicitly zeroed before the thread i
 ## 17. Threat Model
 
 | Threat | Mitigation |
-|---|---|
+|--------|------------|
 | Secrets in agent memory | Vault + reference tokens at every checkpoint |
 | Prompt injection / jailbreaks | PromptShield (18 rules) |
 | Derived secret laundering | Taint propagation tracking |
@@ -764,7 +758,7 @@ For complete TypeScript type definitions and method signatures, see the generate
 - **TypeDoc:** `docs/api/index.html`
 - **Generate:** `pnpm docs`
 - **Serve locally:** `pnpm docs:serve`
-- **Primary entry point:** `packages/@roadsidelab/keyspot-core/src/index.ts` (exports `KeySpot SDK` class)
+- **Primary entry point:** `packages/@roadsidelab/keyspot-core/src/index.ts`
 
 ### Source Code
 

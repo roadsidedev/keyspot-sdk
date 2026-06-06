@@ -5,39 +5,43 @@ description: How to install KeySpot SDK packages
 
 # Installation
 
-KeySpot SDK is published under the `@roadsidelab` scope.
+KeySpot SDK is published under the `@roadsidelab` scope. Install only what you need.
 
-### Recommended (Core + Vault)
+## Recommended (Core + Vault)
 
-```bash
+For most use cases you only need the core package and a vault adapter:
+
+```bash npm2yarn
 npm install @roadsidelab/keyspot-core @roadsidelab/keyspot-vault
 ```
 
-### Full Installation
+## Full Installation
 
-```bash
+```bash npm2yarn
 npm install @roadsidelab/keyspot-core \
             @roadsidelab/keyspot-vault \
             @roadsidelab/keyspot-adapters \
             @roadsidelab/keyspot-x402 \
             @roadsidelab/keyspot-server
+```
 
+```bash
 npm install -D @roadsidelab/keyspot-cli
 ```
 
-### Package Overview
+## Package Overview
 
-| Package                        | Description                                      | Required |
-|--------------------------------|--------------------------------------------------|----------|
-| `@roadsidelab/keyspot-core`    | Scanner, TaintEngine, PromptShield, AuditLogger  | Yes      |
-| `@roadsidelab/keyspot-vault`   | Env, Dotenv, HashiCorp, AWS, InMemory adapters   | Yes      |
-| `@roadsidelab/keyspot-patterns`| Built-in secret patterns (optional extension)    | Optional |
-| `@roadsidelab/keyspot-adapters`| Framework wrappers (Anthropic, OpenAI, LangChain)| Optional |
-| `@roadsidelab/keyspot-x402`    | x402 micropayment middleware                     | Optional |
-| `@roadsidelab/keyspot-server`  | Hosted REST API server                           | Optional |
-| `@roadsidelab/keyspot-cli`     | `keyspot scan` and pre-commit hook installer     | Dev      |
+| Package | Description | Required |
+| --- | --- | --- |
+| `@roadsidelab/keyspot-core` | Scanner, TaintEngine, PromptShield, AuditLogger | Yes |
+| `@roadsidelab/keyspot-vault` | Env, Dotenv, HashiCorp, AWS, InMemory adapters | Yes |
+| `@roadsidelab/keyspot-patterns` | Built-in secret patterns (optional extension) | Optional |
+| `@roadsidelab/keyspot-adapters` | Framework wrappers (Anthropic, OpenAI, LangChain) | Optional |
+| `@roadsidelab/keyspot-x402` | x402 micropayment middleware | Optional |
+| `@roadsidelab/keyspot-server` | Hosted REST API server | Optional |
+| `@roadsidelab/keyspot-cli` | `keyspot scan` and pre-commit hook installer | Dev |
 
-### Requirements
+## Requirements
 
 - **Node.js** ≥ 18
 - **TypeScript** ≥ 5.0 (recommended)

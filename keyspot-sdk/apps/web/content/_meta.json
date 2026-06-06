@@ -5,6 +5,10 @@
   "concepts": "Core Concepts",
   "api-reference": "API Reference",
   "vault-adapters": "Vault Adapters",
+  "--- Integrations": {
+    "type": "separator",
+    "title": "Integrations"
+  },
   "integrations": "Framework Integrations",
   "cli": "CLI"
 }
