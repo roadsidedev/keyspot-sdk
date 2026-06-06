@@ -1,7 +1,7 @@
-import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 
 async function test() {
-  const guard = new AgentGuard({
+  const guard = new KeySpot({
     taintEnabled: true,
     promptShield: { enabled: true }
   });

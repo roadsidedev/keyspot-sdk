@@ -1,4 +1,4 @@
-# AgentGuard CI — lint, test, build
+# KeySpot SDK CI — lint, test, build
 name: CI
 
 on:

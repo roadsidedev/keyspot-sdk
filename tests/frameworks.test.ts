@@ -1,30 +1,30 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AgentGuard } from '@roadsidelab/keyspot-core';
-import { withAgentGuard, wrapAnthropic, wrapOpenAI, wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-frameworks';
+import { KeySpot } from '@roadsidelab/keyspot-core';
+import { withKeySpot, wrapAnthropic, wrapOpenAI, wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-frameworks';
 
 describe('Framework Wrappers', () => {
-  describe('withAgentGuard (LangChain)', () => {
+  describe('withKeySpot (LangChain)', () => {
     it('scans chain output through checkpoint', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const chain = {
         invoke: vi.fn().mockResolvedValue({
           output: 'my key is sk-123456789012345678901234567890123456789012345678'
         }),
       };
 
-      const guarded = withAgentGuard(chain, guard);
+      const guarded = withKeySpot(chain, guard);
       const result = await guarded.invoke({ input: 'test' });
 
       expect(result.output).toMatch(/^vault:v1:/);
     });
 
     it('passes clean output through unchanged', async () => {
-      const guard = new AgentGuard();
+      const guard = new KeySpot();
       const chain = {
         invoke: vi.fn().mockResolvedValue({ output: 'clean response' }),
       };
 
-      const guarded = withAgentGuard(chain, guard);
+      const guarded = withKeySpot(chain, guard);
       const result = await guarded.invoke({ input: 'test' });
 
       expect(result.output).toBe('clean response');
@@ -33,7 +33,7 @@ describe('Framework Wrappers', () => {
 
   describe('wrapAnthropic', () => {
     it('scans assistant text responses for secrets', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const client = {
         messages: {
           create: vi.fn().mockResolvedValue({
@@ -57,7 +57,7 @@ describe('Framework Wrappers', () => {
     });
 
     it('preserves non-text content blocks', async () => {
-      const guard = new AgentGuard();
+      const guard = new KeySpot();
       const client = {
         messages: {
           create: vi.fn().mockResolvedValue({
@@ -84,7 +84,7 @@ describe('Framework Wrappers', () => {
 
   describe('wrapOpenAI', () => {
     it('scans chat completion responses for secrets', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const client = {
         chat: {
           completions: {
@@ -116,7 +116,7 @@ describe('Framework Wrappers', () => {
     });
 
     it('handles null content gracefully', async () => {
-      const guard = new AgentGuard();
+      const guard = new KeySpot();
       const client = {
         chat: {
           completions: {
@@ -146,7 +146,7 @@ describe('Framework Wrappers', () => {
 
   describe('wrapOpenClawAgent', () => {
     it('scans agent run output through checkpoint', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const agent: any = {
         run: vi.fn().mockResolvedValue({
           summary: 'deployed with key sk-123456789012345678901234567890123456789012345678',
@@ -160,7 +160,7 @@ describe('Framework Wrappers', () => {
     });
 
     it('preserves clean agent output', async () => {
-      const guard = new AgentGuard();
+      const guard = new KeySpot();
       const agent: any = {
         run: vi.fn().mockResolvedValue({ status: 'ok', message: 'deployment complete' }),
       };
@@ -175,7 +175,7 @@ describe('Framework Wrappers', () => {
 
   describe('wrapHermesAgent', () => {
     it('scans agent run output through checkpoint', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const agent: any = {
         run: vi.fn().mockResolvedValue({
           result: 'token is sk-123456789012345678901234567890123456789012345678',
@@ -189,7 +189,7 @@ describe('Framework Wrappers', () => {
     });
 
     it('preserves clean agent output', async () => {
-      const guard = new AgentGuard();
+      const guard = new KeySpot();
       const agent: any = {
         run: vi.fn().mockResolvedValue({ status: 'clean' }),
       };

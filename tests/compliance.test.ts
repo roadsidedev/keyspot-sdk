@@ -50,7 +50,7 @@ describe('Compliance & Audit', () => {
 
   describe('PersistedAuditLogger', () => {
     function makeLogger() {
-      const dir = join(tmpdir(), `agentguard-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      const dir = join(tmpdir(), `keyspot-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
       const kp = generateSigningKeyPair();
       const logger = new PersistedAuditLogger({ logDir: dir, signingKeyPair: kp });
       return { logger, dir, kp };

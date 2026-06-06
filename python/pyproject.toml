@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "agentguard"
+name = "keyspot"
 version = "2.0.0"
 description = "Runtime security layer for autonomous AI agents — Scanner, TaintEngine, Vault, PromptShield"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-keywords = ["agentguard", "ai-security", "secret-scanner", "taint-tracking", "vault"]
+keywords = ["keyspot", "ai-security", "secret-scanner", "taint-tracking", "vault"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -29,4 +29,4 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agentguard"]
+packages = ["src/keyspot"]

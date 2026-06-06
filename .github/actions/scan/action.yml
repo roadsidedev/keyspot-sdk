@@ -1,7 +1,7 @@
-# AgentGuard GitHub Action — Scan PRs for secrets
-name: 'AgentGuard Scan'
-description: 'Scan pull request changes for leaked secrets using AgentGuard'
-author: 'AgentGuard'
+# KeySpot GitHub Action — Scan PRs for secrets
+name: 'KeySpot Scan'
+description: 'Scan pull request changes for leaked secrets using KeySpot'
+author: 'KeySpot SDK'
 
 branding:
   icon: 'shield'
@@ -40,7 +40,7 @@ runs:
         CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
         for file in $CHANGED_FILES; do
           echo "Scanning: $file"
-          node packages/@agentguard/cli/dist/index.js scan "$file" --json
+          node packages/@keyspot/cli/dist/index.js scan "$file" --json
         done
       shell: bash
       working-directory: ${{ github.action_path }}

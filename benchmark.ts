@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * AgentGuard Benchmark Suite
+ * KeySpot Benchmark Suite
  * Measures checkpoint, scan, and vault performance.
  *
  * Usage: node dist/benchmark.js [--iterations 100]
  */
-import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 import { builtInPatterns } from '@roadsidelab/keyspot-patterns';
 
 const iterations = parseInt(process.argv[2] || '100', 10);
@@ -36,10 +36,10 @@ async function benchmark(name: string, iterations: number, fn: () => Promise<voi
 }
 
 async function main() {
-  console.log(`\nAgentGuard Benchmark Suite (${iterations} iterations)\n`);
+  console.log(`\nKeySpot Benchmark Suite (${iterations} iterations)\n`);
 
   // 1. Small object scan
-  const guard = new AgentGuard({ taintEnabled: true });
+  const guard = new KeySpot({ taintEnabled: true });
   const smallObj = { message: 'hello', key: 'sk-123456789012345678901234567890123456789012345678' };
   await benchmark('checkpoint (small object, 1 secret)', iterations, () =>
     guard.checkpoint(smallObj),

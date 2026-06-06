@@ -1,21 +1,21 @@
-# AgentGuard Python SDK
+# KeySpot Python SDK
 
-Python implementation of the AgentGuard runtime security layer for AI agents.
+Python implementation of the KeySpot runtime security layer for AI agents.
 
 ## Installation
 
 ```bash
-pip install agentguard
+pip install keyspot
 ```
 
 ## Quick Start
 
 ```python
 import asyncio
-from agentguard import AgentGuard
+from keyspot import KeySpot
 
 async def main():
-    guard = AgentGuard(taint_enabled=True)
+    guard = KeySpot(taint_enabled=True)
 
     # Scan and vault secrets
     clean = await guard.checkpoint({
@@ -36,7 +36,7 @@ asyncio.run(main())
 | `Vault` | InMemoryVaultAdapter, HMAC refs, TTL, ACLs | ✅ |
 | `PromptShield` | 12 rules, async, case-insensitive | ✅ |
 | `AuditLogger` | SHA-256 hash chain, tamper detection | ✅ |
-| `AgentGuard` | checkpoint, scan, validate_prompt | ✅ |
+| `KeySpot` | checkpoint, scan, validate_prompt | ✅ |
 
 ## Testing
 
@@ -48,7 +48,7 @@ pytest
 
 ## API
 
-### AgentGuard(config)
+### KeySpot(config)
 - `vault`: optional vault adapter
 - `taint_enabled`: enable taint tracking (default: True)
 - `prompt_shield_enabled`: enable PromptShield

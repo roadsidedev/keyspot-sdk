@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createApp } from '@roadsidelab/keyspot-server';
 import { createServer, AddressInfo } from 'net';
 import http from 'http';
-import { MetricsRegistry, metrics } from '../packages/@agentguard/server/src/metrics.js';
+import { MetricsRegistry, metrics } from '../packages/@keyspot/server/src/metrics.js';
 
 function startTestServer(app: any): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -89,7 +89,7 @@ describe('Server API', () => {
     const res = await fetch(`${baseUrl}/metrics`);
     const text = await res.text();
     expect(res.status).toBe(200);
-    expect(text).toContain('agentguard_');
+    expect(text).toContain('keyspot_');
     expect(res.headers.get('Content-Type')).toContain('text/plain');
   });
 });

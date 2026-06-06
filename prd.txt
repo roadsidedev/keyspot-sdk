@@ -1,4 +1,4 @@
-# AgentGuard SDK v2.0 Product Requirements Document (PRD)
+# KeySpot SDK v2.0 Product Requirements Document (PRD)
 
 **Version:** 1.0  
 **Date:** June 4, 2026  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & Vision
 
-**AgentGuard** is the **runtime security layer for autonomous AI agents** — not just another secret scanner, but a complete secure-memory infrastructure that enforces the **Checkpoint → Scan → Taint → Vault → Replace → Continue** lifecycle at every critical boundary.
+**KeySpot** is the **runtime security layer for autonomous AI agents** — not just another secret scanner, but a complete secure-memory infrastructure that enforces the **Checkpoint → Scan → Taint → Vault → Replace → Continue** lifecycle at every critical boundary.
 
 It protects long-lived agents, shared memory, vector stores, tool outputs, and multi-agent communication from credential leakage while enabling zero-knowledge execution and full compliance.
 
@@ -37,7 +37,7 @@ Once leaked, regex scanners fail (summaries, rewrites, embeddings no longer matc
 - Agent economy (on-chain agents paying for services via x402)
 - Vector DBs becoming permanent memory
 
-AgentGuard solves the full lifecycle with **automated remediation + taint tracking + boundary enforcement**.
+KeySpot solves the full lifecycle with **automated remediation + taint tracking + boundary enforcement**.
 
 ---
 
@@ -94,7 +94,7 @@ AgentGuard solves the full lifecycle with **automated remediation + taint tracki
 ## 6. High-Level Architecture
 
 **Monorepo remains unchanged**  
-`packages/@agentguard/{core, vault, patterns, adapters, server, cli, x402}` + meta `agentguard`
+`packages/@keyspot/{core, vault, patterns, adapters, server, cli, x402}` + meta `keyspot`
 
 **Key Data Flow (enhanced)**
 1. Agent state → Checkpoint trigger
@@ -118,7 +118,7 @@ AgentGuard solves the full lifecycle with **automated remediation + taint tracki
 ## 7. Functional Requirements (Existing + Improvements)
 
 ### 7.1 Core API (enhanced v1)
-- `new AgentGuard(config)` – unchanged + new options:
+- `new KeySpot(config)` – unchanged + new options:
   - `taintEnabled: boolean`
   - `vectorStores: []`
   - `promptShield: { enabled, rules }`
@@ -190,7 +190,7 @@ AgentGuard solves the full lifecycle with **automated remediation + taint tracki
 - Self-hosted = free forever
 
 ### 7.11 CLI & Server
-- `agentguard scan --git`, pre-commit hooks, GitHub Actions
+- `keyspot scan --git`, pre-commit hooks, GitHub Actions
 - Enhanced server middleware with x402 + new features
 
 ### 7.12 Patterns & Extensibility
@@ -287,12 +287,12 @@ AgentGuard solves the full lifecycle with **automated remediation + taint tracki
 
 ## Appendix A: Existing Built-in Patterns (from v1)
 
-(Ethereum private keys, OpenAI/Anthropic keys, AWS/GCP creds, GitHub tokens, DB strings, JWTs, RSA/Ed25519 PEM keys, etc. – full list maintained in `@agentguard/patterns`)
+(Ethereum private keys, OpenAI/Anthropic keys, AWS/GCP creds, GitHub tokens, DB strings, JWTs, RSA/Ed25519 PEM keys, etc. – full list maintained in `@keyspot/patterns`)
 
 ## Appendix B: Example Usage (v2)
 
 ```ts
-const guard = new AgentGuard({
+const guard = new KeySpot({
   vault: new AWSSecretsAdapter(),
   taintEnabled: true,
   vectorStores: [new QdrantAdapter(qdrantClient)],
@@ -300,5 +300,5 @@ const guard = new AgentGuard({
   workerPool: { size: 8 }
 });
 
-const safeChain = withAgentGuard(myLangChainAgent, guard);
+const safeChain = withKeySpot(myLangChainAgent, guard);
 await guard.checkpoint(agentState); // now taint + vector safe

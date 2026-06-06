@@ -32,7 +32,7 @@
 - USDC transfer calldata generation
 
 ### Frameworks
-- LangChain Runnable wrapper (`withAgentGuard`)
+- LangChain Runnable wrapper (`withKeySpot`)
 - Anthropic SDK wrapper (`wrapAnthropic`)
 - OpenAI SDK wrapper (`wrapOpenAI`)
 - OpenClaw agent wrapper
@@ -46,14 +46,14 @@
 - x402 payment gateway
 
 ### CLI & DevOps
-- `agentguard scan` (recursive directory scanner)
-- `agentguard scan --git` (pre-commit mode)
-- `agentguard scan --prune` (auto-redact)
-- `agentguard install` (pre-commit hook)
+- `keyspot scan` (recursive directory scanner)
+- `keyspot scan --git` (pre-commit mode)
+- `keyspot scan --prune` (auto-redact)
+- `keyspot install` (pre-commit hook)
 - GitHub Actions CI (Node 18/20/22)
 
 ### Python SDK
-- Full parity with TypeScript: Scanner, TaintEngine, Vault, PromptShield, AuditLogger, AgentGuard
+- Full parity with TypeScript: Scanner, TaintEngine, Vault, PromptShield, AuditLogger, KeySpot
 - 20 pytest tests
 - hatchling build configuration
 

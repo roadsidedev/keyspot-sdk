@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { writeFileSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 
 describe('CLI', () => {
-  const testDir = join(tmpdir(), `agentguard-cli-test-${Date.now()}`);
+  const testDir = join(tmpdir(), `keyspot-cli-test-${Date.now()}`);
 
   beforeAll(() => mkdirSync(testDir, { recursive: true }));
 
@@ -13,7 +13,7 @@ describe('CLI', () => {
     const testFile = join(testDir, 'test.txt');
     writeFileSync(testFile, 'my api key is sk-123456789012345678901234567890123456789012345678');
 
-    const guard = new AgentGuard();
+    const guard = new KeySpot();
     const matches = await guard.scan(readFileSync(testFile, 'utf-8'));
     expect(matches.length).toBeGreaterThan(0);
     expect(matches[0].type).toBe('openai_api_key');
@@ -23,7 +23,7 @@ describe('CLI', () => {
     const testFile = join(testDir, 'clean.txt');
     writeFileSync(testFile, 'this is a safe file with no secrets');
 
-    const guard = new AgentGuard();
+    const guard = new KeySpot();
     const matches = await guard.scan(readFileSync(testFile, 'utf-8'));
     expect(matches).toHaveLength(0);
   });
@@ -35,7 +35,7 @@ describe('CLI', () => {
       'AKIA1234567890123456',
     ].join('\n'));
 
-    const guard = new AgentGuard();
+    const guard = new KeySpot();
     const matches = await guard.scan(readFileSync(testFile, 'utf-8'));
     expect(matches.length).toBeGreaterThanOrEqual(2);
     expect(matches.map(m => m.type)).toContain('openai_api_key');

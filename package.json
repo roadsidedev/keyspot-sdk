@@ -2,7 +2,7 @@
   "name": "@roadsidelab/keyspot-sdk",
   "version": "2.0.0",
   "private": true,
-  "description": "Runtime security layer for autonomous AI agents",
+  "description": "KeySpot SDK monorepo — runtime security layer for autonomous AI agents. Published as @roadsidelab/keyspot-sdk.",
   "type": "module",
   "scripts": {
     "build": "pnpm -r run build",
@@ -15,7 +15,8 @@
     "typecheck": "tsc -b",
     "docs": "typedoc",
     "docs:serve": "npx serve docs/api",
-    "format": "prettier --write \"packages/*/src/**/*.ts\""
+    "format": "prettier --write \"packages/*/src/**/*.ts\"",
+    "publish:npm": "pnpm publish -r --access public"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ConsoleTracer, AgentGuardTracer, noopTracer, setGlobalTracer, getGlobalTracer } from '@roadsidelab/keyspot-core/telemetry';
-import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { ConsoleTracer, KeySpotTracer, noopTracer, setGlobalTracer, getGlobalTracer } from '@roadsidelab/keyspot-core/telemetry';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 
 describe('Telemetry (Tracer)', () => {
   it('noopTracer returns a span without throwing', () => {
@@ -25,9 +25,9 @@ describe('Telemetry (Tracer)', () => {
     expect(logs.some(l => l.includes('[TRACE] test.op end'))).toBe(true);
   });
 
-  it('AgentGuardTracer wraps checkpoint with tracing', async () => {
+  it('KeySpotTracer wraps checkpoint with tracing', async () => {
     const state = { key: 'sk-123456789012345678901234567890123456789012345678' };
-    const guard = new AgentGuard({ taintEnabled: true, tracer: noopTracer });
+    const guard = new KeySpot({ taintEnabled: true, tracer: noopTracer });
     const result = await guard.checkpoint(state);
     expect(result.key).toMatch(/^vault:v1:/);
   });

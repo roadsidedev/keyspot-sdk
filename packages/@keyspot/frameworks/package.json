@@ -1,0 +1,60 @@
+{
+  "name": "@roadsidelab/keyspot-frameworks",
+  "version": "2.0.0",
+  "description": "Framework wrappers — LangChain, Anthropic, OpenAI — auto-scan agent outputs through KeySpot",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./langchain": {
+      "types": "./dist/langchain.d.ts",
+      "import": "./dist/langchain.js"
+    },
+    "./anthropic": {
+      "types": "./dist/anthropic.d.ts",
+      "import": "./dist/anthropic.js"
+    },
+    "./openai": {
+      "types": "./dist/openai.d.ts",
+      "import": "./dist/openai.js"
+    },
+    "./openclaw": {
+      "types": "./dist/openclaw.d.ts",
+      "import": "./dist/openclaw.js"
+    },
+    "./hermes": {
+      "types": "./dist/hermes.d.ts",
+      "import": "./dist/hermes.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@roadsidelab/keyspot-core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roadsidelab/keyspot-sdk",
+    "directory": "packages/@keyspot/frameworks"
+  },
+  "keywords": ["keyspot", "langchain", "anthropic", "openai", "agent-security"],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

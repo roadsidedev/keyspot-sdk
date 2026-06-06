@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 import { ChromaAdapter } from '@roadsidelab/keyspot-adapters/chroma';
 import { PineconeAdapter } from '@roadsidelab/keyspot-adapters/pinecone';
 import { QdrantAdapter } from '@roadsidelab/keyspot-adapters/qdrant';
@@ -11,7 +11,7 @@ import { BaseVectorStoreAdapter } from '@roadsidelab/keyspot-adapters';
 describe('Vector Store Adapters', () => {
   describe('ChromaAdapter', () => {
     it('intercepts collection.add and sanitizes documents', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new ChromaAdapter(guard);
       const addMock = vi.fn().mockResolvedValue({});
       const collection = {
@@ -27,7 +27,7 @@ describe('Vector Store Adapters', () => {
 
   describe('PineconeAdapter', () => {
     it('intercepts index.upsert and sanitizes records', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new PineconeAdapter(guard);
       const upsertMock = vi.fn().mockResolvedValue({});
       const index = {
@@ -43,7 +43,7 @@ describe('Vector Store Adapters', () => {
 
   describe('QdrantAdapter', () => {
     it('intercepts client.upsert and sanitizes points', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new QdrantAdapter(guard);
       const upsertMock = vi.fn().mockResolvedValue({});
       const client = {
@@ -59,7 +59,7 @@ describe('Vector Store Adapters', () => {
 
   describe('WeaviateAdapter', () => {
     it('intercepts data.creator and sanitizes payload', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new WeaviateAdapter(guard);
       const doMock = vi.fn().mockResolvedValue({});
       const builder = { payload: { text: 'sk-123456789012345678901234567890123456789012345678' }, do: doMock };
@@ -74,7 +74,7 @@ describe('Vector Store Adapters', () => {
 
   describe('LanceDBAdapter', () => {
     it('intercepts table.add and sanitizes records', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new LanceDBAdapter(guard);
       const addMock = vi.fn().mockResolvedValue({});
       const table = { add: addMock };
@@ -88,7 +88,7 @@ describe('Vector Store Adapters', () => {
 
   describe('MilvusAdapter', () => {
     it('intercepts client.insert and sanitizes data', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new MilvusAdapter(guard);
       const insertMock = vi.fn().mockResolvedValue({});
       const client = { insert: insertMock };
@@ -102,7 +102,7 @@ describe('Vector Store Adapters', () => {
 
   describe('BaseVectorStoreAdapter', () => {
     it('sanitizes documents through the guard', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const adapter = new (class extends BaseVectorStoreAdapter {
         wrap(store: any) { return store; }
       })(guard);
@@ -111,7 +111,7 @@ describe('Vector Store Adapters', () => {
     });
 
     it('handles clean documents without modification', async () => {
-      const guard = new AgentGuard();
+      const guard = new KeySpot();
       const adapter = new (class extends BaseVectorStoreAdapter {
         wrap(store: any) { return store; }
       })(guard);

@@ -11,7 +11,7 @@
 2. [Installation](#2-installation)
 3. [Quick Start](#3-quick-start)
 4. [Core Concepts](#4-core-concepts)
-5. [KeySpot SDK Client — API Reference](#5-agentguard-client--api-reference)
+5. [KeySpot SDK Client — API Reference](#5-keyspot-client--api-reference)
 6. [Scanner](#6-scanner)
 7. [Taint Engine](#7-taint-engine)
 8. [PromptShield](#8-promptshield)
@@ -64,7 +64,7 @@ The core principle is simple: **an agent should never hold a secret longer than 
 
 ## 2. Installation
 
-KeySpot SDK is published as scoped packages under `@agentguard`. Install only what you need.
+KeySpot SDK is published as scoped packages under `@roadsidelab`. Install only what you need.
 
 ### Minimum install
 
@@ -98,7 +98,7 @@ pnpm add -D @roadsidelab/keyspot-cli
 | `@roadsidelab/keyspot-adapters` | Framework bridges: Anthropic, OpenAI, LangChain, Express | optional |
 | `@roadsidelab/keyspot-x402` | x402 payment middleware (server) and agent client | optional |
 | `@roadsidelab/keyspot-server` | REST API server for hosted or self-hosted deployments | optional |
-| `@roadsidelab/keyspot-cli` | `keyspot scan`, `agentguard install` — install as dev dependency | dev |
+| `@roadsidelab/keyspot-cli` | `keyspot scan`, `keyspot install` — install as dev dependency | dev |
 
 ### Requirements
 
@@ -460,7 +460,7 @@ const vault = new HashiCorpVaultAdapter({
   endpoint: 'https://vault.example.com',
   token: process.env.VAULT_TOKEN,
   mountPath: 'secret',
-  namespace: 'agentguard'
+  namespace: 'keyspot'
 });
 ```
 
@@ -471,7 +471,7 @@ import { AWSSecretsAdapter } from '@roadsidelab/keyspot-vault';
 
 const vault = new AWSSecretsAdapter({
   region: 'us-east-1',
-  prefix: 'agentguard/',
+  prefix: 'keyspot/',
   tags: { Environment: 'production' }
 });
 ```
@@ -643,7 +643,7 @@ keyspot scan ./src --json
 keyspot scan --git
 
 # Install pre-commit hook
-agentguard install
+keyspot install
 ```
 
 ### GitHub Actions
@@ -668,8 +668,8 @@ jobs:
 ### Self-Hosted (Docker)
 
 ```bash
-docker build -t agentguard .
-docker run -p 3000:3000 agentguard
+docker build -t keyspot .
+docker run -p 3000:3000 keyspot
 ```
 
 ### x402 Micropayments (Hosted)
@@ -681,7 +681,7 @@ const guard = new KeySpot SDK({
   hosted: {
     enabled: true,
     agentWalletAddress: '0xAgent...',
-    facilitatorUrl: 'https://api.agentguard.ai'
+    facilitatorUrl: 'https://api.keyspot.dev'
   }
 });
 ```
@@ -742,8 +742,8 @@ After each scan, worker memory buffers are explicitly zeroed before the thread i
 
 We take security seriously. If you discover a vulnerability:
 
-- **Email:** security@agentguard.dev
-- **PGP:** Available at `https://agentguard.dev/.well-known/pgp-key.txt`
+- **Email:** security@keyspot.dev
+- **PGP:** Available at `https://keyspot.dev/.well-known/pgp-key.txt`
 
 **Response timeline:**
 

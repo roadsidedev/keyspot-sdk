@@ -1,14 +1,14 @@
-# AgentGuard Runtime Integrations
+# KeySpot Runtime Integrations
 
-AgentGuard is designed to be runtime-agnostic. Below are guides for integrating with popular agent frameworks.
+KeySpot is designed to be runtime-agnostic. Below are guides for integrating with popular agent frameworks.
 
 ## 1. Manus Integration
-Manus agents can use AgentGuard as a middleware in their `agent-loop`.
+Manus agents can use KeySpot as a middleware in their `agent-loop`.
 
 ```typescript
-import { AgentGuard } from '@agentguard/core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 
-const guard = new AgentGuard();
+const guard = new KeySpot();
 
 // Inside Manus agent loop
 async function manusLoop(state) {
@@ -29,9 +29,9 @@ async function manusLoop(state) {
 For open-source runtimes, use the `guard.wrap` method to intercept tool outputs.
 
 ```typescript
-import { AgentGuard } from '@agentguard/core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 
-const guard = new AgentGuard({
+const guard = new KeySpot({
   vault: new AWSSecretsAdapter({ region: 'us-east-1' })
 });
 
@@ -46,18 +46,18 @@ Integrate via the CLI or as a pre-push hook for persistent memory.
 
 ```bash
 # Scan agent memory before persisting to disk
-agentguard scan --path ./agent_memory.json --prune
+keyspot scan --path ./agent_memory.json --prune
 ```
 
 ## 4. x402 Hosted Usage
 If using the hosted version, ensure your agent carries an ERC-8004 identity.
 
 ```typescript
-const guard = new AgentGuard({
+const guard = new KeySpot({
   hosted: {
     enabled: true,
     agentWalletAddress: "0xAgent...",
-    facilitatorUrl: "https://api.agentguard.ai"
+    facilitatorUrl: "https://api.keyspot.dev"
   }
 });
 ```

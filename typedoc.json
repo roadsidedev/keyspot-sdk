@@ -1,25 +1,25 @@
 {
-  "name": "agentguard-sdk",
+  "name": "keyspot-sdk",
   "excludeExternals": true,
   "excludePrivate": true,
   "excludeProtected": true,
   "entryPoints": [
-    "packages/@agentguard/core/src/index.ts",
-    "packages/@agentguard/patterns/src/index.ts",
-    "packages/@agentguard/vault/src/index.ts",
-    "packages/@agentguard/adapters/src/index.ts",
-    "packages/@agentguard/x402/src/index.ts",
-    "packages/@agentguard/server/src/app.ts",
-    "packages/@agentguard/frameworks/src/index.ts",
-    "packages/@agentguard/cli/src/index.ts",
-    "packages/@agentguard/core/src/compliance.ts",
-    "packages/@agentguard/core/src/telemetry.ts",
-    "packages/@agentguard/server/src/metrics.ts"
+    "packages/@keyspot/core/src/index.ts",
+    "packages/@keyspot/patterns/src/index.ts",
+    "packages/@keyspot/vault/src/index.ts",
+    "packages/@keyspot/adapters/src/index.ts",
+    "packages/@keyspot/x402/src/index.ts",
+    "packages/@keyspot/server/src/app.ts",
+    "packages/@keyspot/frameworks/src/index.ts",
+    "packages/@keyspot/cli/src/index.ts",
+    "packages/@keyspot/core/src/compliance.ts",
+    "packages/@keyspot/core/src/telemetry.ts",
+    "packages/@keyspot/server/src/metrics.ts"
   ],
   "out": "docs/api",
   "tsconfig": "tsconfig.typedoc.json",
   "readme": "README.md",
-  "name": "AgentGuard SDK v2.0",
+  "name": "KeySpot SDK v2.0",
   "includeVersion": true,
   "exclude": ["**/*.test.ts", "**/tests/**", "benchmark.ts", "test-v2.ts", "vitest.config.ts"]
 }

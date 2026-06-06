@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AgentGuard } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-core';
 import { TaintEngine } from '@roadsidelab/keyspot-core/taint';
 import { Scanner } from '@roadsidelab/keyspot-core/scanner';
 
@@ -8,7 +8,7 @@ describe('Phase 2: Core Hardening', () => {
   describe('Rotation Hooks', () => {
     it('calls rotation hook when secret is found', async () => {
       const rotatedSecrets: string[] = [];
-      const guard = new AgentGuard({
+      const guard = new KeySpot({
         rotationHook: async (match) => {
           rotatedSecrets.push(match.rawValue!);
           return 'rotated-' + match.rawValue;
@@ -24,7 +24,7 @@ describe('Phase 2: Core Hardening', () => {
   // 2.5 Taint Propagation Through Vault Refs
   describe('Taint Propagation', () => {
     it('tags vault references as tainted', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const taintEngine = guard.getTaintEngine();
       const state = { key: 'sk-123456789012345678901234567890123456789012345678' };
       const cleanState = await guard.checkpoint(state);
@@ -36,7 +36,7 @@ describe('Phase 2: Core Hardening', () => {
     });
 
     it('propagates taint to derived content', async () => {
-      const guard = new AgentGuard({ taintEnabled: true });
+      const guard = new KeySpot({ taintEnabled: true });
       const taintEngine = guard.getTaintEngine();
       // Tag a source value
       taintEngine.tag('original-secret', 'sec_001', 'test');
@@ -93,7 +93,7 @@ describe('Phase 2: Core Hardening', () => {
   // 2.8 Worker Pool
   describe('Worker Pool', () => {
     it('runs scan jobs inline when worker script unavailable', async () => {
-      const { WorkerPool } = await import('@agentguard/core/worker');
+      const { WorkerPool } = await import('@roadsidelab/keyspot-core/worker');
       const pool = new WorkerPool(2);
       const result = await pool.run({ type: 'scan', data: 'sk-123456789012345678901234567890123456789012345678' });
       expect(result).toBeDefined();
@@ -102,7 +102,7 @@ describe('Phase 2: Core Hardening', () => {
     });
 
     it('handles queue when all workers busy', async () => {
-      const { WorkerPool } = await import('@agentguard/core/worker');
+      const { WorkerPool } = await import('@roadsidelab/keyspot-core/worker');
       const pool = new WorkerPool(1);
       const results = await Promise.all([
         pool.run({ type: 'scan', data: 'test1' }),

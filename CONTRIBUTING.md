@@ -1,4 +1,4 @@
-# Contributing to AgentGuard
+# Contributing to KeySpot SDK
 
 ## Development Setup
 
@@ -11,7 +11,7 @@ pnpm run test
 ## Project Structure
 
 ```
-packages/@agentguard/
+packages/@keyspot/
 ├── core/          Scanner, TaintEngine, AuditLogger, PromptShield, WorkerPool, Telemetry
 ├── patterns/      50+ built-in patterns + Aho-Corasick trie + PatternRegistry
 ├── vault/         InMemoryVaultAdapter, AWSSecretsAdapter, HMAC refs
@@ -19,7 +19,7 @@ packages/@agentguard/
 ├── x402/          Payment facilitator, client, Base chain verification
 ├── server/        Express server, rate limiting, metrics, health checks
 ├── frameworks/    LangChain, Anthropic, OpenAI, OpenClaw, Hermes wrappers
-├── cli/           agentguard scan, install, --git, --prune
+├── cli/           keyspot scan, install, --git, --prune
 python/            Python SDK (full TypeScript parity)
 tests/             Vitest test suite
 ```
@@ -44,7 +44,7 @@ cd python && pytest     # Run Python tests
 
 ```bash
 pnpm run build           # Build all packages
-pnpm --filter @agentguard/core run build   # Build single package
+pnpm --filter @roadsidelab/keyspot-core run build   # Build single package
 ```
 
 ## Pull Request Checklist

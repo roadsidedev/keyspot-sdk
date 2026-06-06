@@ -1,0 +1,44 @@
+{
+  "name": "@roadsidelab/keyspot-vault",
+  "version": "2.0.0",
+  "description": "Pluggable secret storage with cryptographic vault references, TTL, ACLs, and rotation hooks",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./aws": {
+      "types": "./dist/aws.d.ts",
+      "import": "./dist/aws.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roadsidelab/keyspot-sdk",
+    "directory": "packages/@keyspot/vault"
+  },
+  "keywords": ["keyspot", "vault", "secret-storage", "hmac", "ttl", "acl"],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

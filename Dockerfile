@@ -12,4 +12,4 @@ RUN pnpm build
 
 EXPOSE 3000
 
-CMD ["node", "packages/@agentguard/server/dist/index.js"]
+CMD ["node", "packages/@keyspot/server/dist/index.js"]

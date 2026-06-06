@@ -39,7 +39,7 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(@opentelemetry/api@1.9.1)(@types/node@20.19.41)(@vitest/coverage-v8@4.1.8)(vite@6.4.3(@types/node@20.19.41)(yaml@2.9.0))
 
-  packages/@agentguard/adapters:
+  packages/@keyspot/adapters:
     dependencies:
       '@pinecone-database/pinecone':
         specifier: ^3.0.0
@@ -67,7 +67,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/cli:
+  packages/@keyspot/cli:
     dependencies:
       '@roadsidelab/keyspot-core':
         specifier: workspace:*
@@ -83,7 +83,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/core:
+  packages/@keyspot/core:
     dependencies:
       '@roadsidelab/keyspot-adapters':
         specifier: workspace:*
@@ -99,7 +99,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/frameworks:
+  packages/@keyspot/frameworks:
     dependencies:
       '@roadsidelab/keyspot-core':
         specifier: workspace:*
@@ -109,13 +109,13 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/patterns:
+  packages/@keyspot/patterns:
     devDependencies:
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/server:
+  packages/@keyspot/server:
     dependencies:
       '@roadsidelab/keyspot-core':
         specifier: workspace:*
@@ -149,7 +149,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/vault:
+  packages/@keyspot/vault:
     dependencies:
       '@aws-sdk/client-secrets-manager':
         specifier: ^3.0.0
@@ -159,7 +159,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/@agentguard/x402:
+  packages/@keyspot/x402:
     dependencies:
       viem:
         specifier: ^2.0.0

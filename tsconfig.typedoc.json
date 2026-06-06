@@ -1,20 +1,20 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "@agentguard/core": ["./packages/@agentguard/core/src"],
-      "@agentguard/core/*": ["./packages/@agentguard/core/src/*"],
-      "@agentguard/patterns": ["./packages/@agentguard/patterns/src"],
-      "@agentguard/vault": ["./packages/@agentguard/vault/src"],
-      "@agentguard/adapters": ["./packages/@agentguard/adapters/src"],
-      "@agentguard/adapters/*": ["./packages/@agentguard/adapters/src/*"],
-      "@agentguard/x402": ["./packages/@agentguard/x402/src"],
-      "@agentguard/server": ["./packages/@agentguard/server/src/app.ts"],
-      "@agentguard/server/*": ["./packages/@agentguard/server/src/*"],
-      "@agentguard/frameworks": ["./packages/@agentguard/frameworks/src"],
-      "@agentguard/cli": ["./packages/@agentguard/cli/src"],
-      "@agentguard/x402": ["./packages/@agentguard/x402/src"]
+      "@roadsidelab/keyspot-core": ["./packages/@keyspot/core/src"],
+      "@roadsidelab/keyspot-core/*": ["./packages/@keyspot/core/src/*"],
+      "@roadsidelab/keyspot-patterns": ["./packages/@keyspot/patterns/src"],
+      "@roadsidelab/keyspot-vault": ["./packages/@keyspot/vault/src"],
+      "@roadsidelab/keyspot-adapters": ["./packages/@keyspot/adapters/src"],
+      "@roadsidelab/keyspot-adapters/*": ["./packages/@keyspot/adapters/src/*"],
+      "@roadsidelab/keyspot-x402": ["./packages/@keyspot/x402/src"],
+      "@roadsidelab/keyspot-server": ["./packages/@keyspot/server/src/app.ts"],
+      "@roadsidelab/keyspot-server/*": ["./packages/@keyspot/server/src/*"],
+      "@roadsidelab/keyspot-frameworks": ["./packages/@keyspot/frameworks/src"],
+      "@roadsidelab/keyspot-cli": ["./packages/@keyspot/cli/src"]
     }
   },
-  "exclude": ["**/*.test.ts", "**/tests/**", "benchmark.ts", "test-v2.ts", "vitest.config.ts"]
+  "exclude": ["**/*.test.ts", "**/tests/**", "benchmark.ts", "test-v2.ts", "vitest.config.ts", "apps/web", "keyspot-sdk/apps/web"]
 }
