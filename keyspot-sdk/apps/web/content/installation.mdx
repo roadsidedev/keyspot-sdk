@@ -1,45 +1,26 @@
 ---
 title: Installation
-description: How to install KeySpot SDK packages
+description: How to install KeySpot SDK
 ---
 
 # Installation
 
-KeySpot SDK is published under the `@roadsidelab` scope. Install only what you need.
-
-## Recommended (Core + Vault)
-
-For most use cases you only need the core package and a vault adapter:
+KeySpot SDK is published as a single package under the `@roadsidelab` scope. One install, everything included.
 
 ```bash npm2yarn
-npm install @roadsidelab/keyspot-core @roadsidelab/keyspot-vault
-```
-
-## Full Installation
-
-```bash npm2yarn
-npm install @roadsidelab/keyspot-core \
-            @roadsidelab/keyspot-vault \
-            @roadsidelab/keyspot-adapters \
-            @roadsidelab/keyspot-x402 \
-            @roadsidelab/keyspot-server
-```
-
-```bash
-npm install -D @roadsidelab/keyspot-cli
+npm install @roadsidelab/keyspot-sdk
 ```
 
 ## Package Overview
 
-| Package | Description | Required |
+| Import path | Description | Heavy deps? |
 | --- | --- | --- |
-| `@roadsidelab/keyspot-core` | Scanner, TaintEngine, PromptShield, AuditLogger | Yes |
-| `@roadsidelab/keyspot-vault` | Env, Dotenv, HashiCorp, AWS, InMemory adapters | Yes |
-| `@roadsidelab/keyspot-patterns` | Built-in secret patterns (optional extension) | Optional |
-| `@roadsidelab/keyspot-adapters` | Framework wrappers (Anthropic, OpenAI, LangChain) | Optional |
-| `@roadsidelab/keyspot-x402` | x402 micropayment middleware | Optional |
-| `@roadsidelab/keyspot-server` | Hosted REST API server | Optional |
-| `@roadsidelab/keyspot-cli` | `keyspot scan` and pre-commit hook installer | Dev |
+| `@roadsidelab/keyspot-sdk` | KeySpot, Scanner, TaintEngine, PromptShield, Vault, Audit | No |
+| `@roadsidelab/keyspot-sdk/adapters` | Vector store adapters (Chroma, Pinecone, Qdrant, etc.) | Yes* |
+| `@roadsidelab/keyspot-sdk/frameworks` | Framework wrappers (LangChain, Anthropic, OpenAI) | No |
+| `@roadsidelab/keyspot-sdk/cli` | CLI commands (`keyspot scan`) | No |
+
+*\* Heavy deps are optional — only downloaded if you use `/adapters`.*
 
 ## Requirements
 

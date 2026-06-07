@@ -44,9 +44,9 @@ export default function KeySpotLanding() {
             <span>Node 18+</span>
           </div>
           <div className="group relative flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-5 py-4 font-mono text-sm">
-            <code className="flex-1 text-left">npm install @roadsidelab/keyspot-core</code>
+            <code className="flex-1 text-left">npm install @roadsidelab/keyspot-sdk</code>
             <button
-              onClick={() => navigator.clipboard.writeText("npm install @roadsidelab/keyspot-core")}
+              onClick={() => navigator.clipboard.writeText("npm install @roadsidelab/keyspot-sdk")}
               className="opacity-60 group-hover:opacity-100 transition p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded"
             >
               <Copy className="h-4 w-4" />
