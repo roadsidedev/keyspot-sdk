@@ -26,8 +26,8 @@ export async function apiKeyAuth(req: Request, res: Response, next: NextFunction
     const count = await redis.incr(key);
     if (count === 1) await redis.expire(key, 60);
 
-    if (count > limits.rateLimit) {
-      res.status(429).json({ error: 'Rate limit exceeded', limit: limits.rateLimit });
+    if (count > limits!.rateLimit) {
+      res.status(429).json({ error: 'Rate limit exceeded', limit: limits!.rateLimit });
       return;
     }
   } catch {

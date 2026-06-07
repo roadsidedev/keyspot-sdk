@@ -60,12 +60,12 @@ export async function createKey(options: CreateKeyOptions): Promise<ApiKeyResult
     where: { userId: options.userId, revokedAt: null },
   });
 
-  if (existingCount >= limits.maxKeys) {
-    throw new Error(`Max API keys (${limits.maxKeys}) reached for tier ${tier}`);
+  if (existingCount >= limits!.maxKeys) {
+    throw new Error(`Max API keys (${limits!.maxKeys}) reached for tier ${tier}`);
   }
 
   const { plaintext, hash } = generateApiKey();
-  const prefix = plaintext.split('_')[0];
+  const prefix = plaintext.split('_')[0]!;
 
   const key = await prisma.apiKey.create({
     data: {
@@ -73,7 +73,7 @@ export async function createKey(options: CreateKeyOptions): Promise<ApiKeyResult
       keyHash: hash,
       name: options.name,
       scopes: options.scopes || ['read:secrets', 'write:vault'],
-      rateLimit: limits.rateLimit,
+      rateLimit: limits!.rateLimit,
       expiresAt: options.expiresAt || null,
       userId: options.userId,
       orgId: options.orgId || null,
@@ -97,7 +97,7 @@ export async function listKeys(userId: string): Promise<Omit<ApiKeyResult, 'plai
     orderBy: { createdAt: 'desc' },
   });
 
-  return keys.map((k) => ({
+  return keys.map((k: { id: string; prefix: string; name: string; scopes: string[]; expiresAt: Date | null; createdAt: Date; lastUsedAt: Date | null }) => ({
     id: k.id,
     prefix: k.prefix,
     name: k.name,

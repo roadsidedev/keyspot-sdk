@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { constructWebhookEvent, syncSubscriptionFromStripe } from '../services/stripe.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.post('/webhook', async (req: Request, res: Response) => {
   const signature = req.headers['stripe-signature'] as string;
@@ -44,7 +44,7 @@ async function handleStripeEvent(event: any): Promise<void> {
       const invoice = event.data.object;
       if (invoice.subscription) {
         const stripe = await import('stripe');
-        const s = new stripe.Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-02-24-acacia' });
+        const s = new stripe.Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-02-24-acacia' as any });
         const subscription = await s.subscriptions.retrieve(invoice.subscription);
         await syncSubscriptionFromStripe(subscription);
       }

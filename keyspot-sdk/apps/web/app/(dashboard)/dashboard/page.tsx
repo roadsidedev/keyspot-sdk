@@ -107,7 +107,7 @@ export default function DashboardPage() {
                 .map(([endpoint, count]) => (
                   <div key={endpoint} className="flex items-center justify-between text-sm">
                     <span className="font-mono text-xs truncate">{endpoint}</span>
-                    <span className="text-zinc-500 tabular-nums">{count.toLocaleString()}</span>
+                    <span className="text-zinc-500 tabular-nums">{(count as number).toLocaleString()}</span>
                   </div>
                 ))}
             </div>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
               {Object.entries(usage.breakdowns.byStatusCode).map(([code, count]) => (
                 <div key={code} className="flex items-center justify-between text-sm">
                   <span className="font-mono text-xs">{code}</span>
-                  <span className="text-zinc-500 tabular-nums">{count.toLocaleString()}</span>
+                  <span className="text-zinc-500 tabular-nums">{(count as number).toLocaleString()}</span>
                 </div>
               ))}
             </div>

@@ -69,12 +69,12 @@ async function handleApiKeyAuth(req: Request, authHeader: string, next: NextFunc
 
 function extractJwt(req: Request): string | null {
   const cookie = req.headers.cookie?.split(';').find((c) => c.trim().startsWith('keyspot_token='));
-  if (cookie) return cookie.split('=')[1]?.trim();
+  if (cookie) return cookie.split('=')[1]?.trim() ?? null;
 
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
     const parts = authHeader.split(' ');
-    if (parts.length === 2) return parts[1];
+    if (parts.length === 2) return parts[1] ?? null;
   }
 
   return null;

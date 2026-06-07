@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma.js';
+import { Tier } from '@prisma/client';
 
 export interface UsageMetric {
   bucket: string;
@@ -138,8 +139,6 @@ export async function getUsageQuotas(userId: string): Promise<{
   requestsThisMonth: number;
   maxRequests: number;
 }> {
-  const { Tier } = await import('@prisma/client');
-
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { subscription: true, _count: { select: { apiKeys: { where: { revokedAt: null } } } } },
@@ -167,9 +166,9 @@ export async function getUsageQuotas(userId: string): Promise<{
 
   return {
     keyCount: user._count.apiKeys,
-    maxKeys: limit.maxKeys,
+    maxKeys: limit!.maxKeys,
     requestsThisMonth,
-    maxRequests: limit.requestsPerMonth,
+    maxRequests: limit!.requestsPerMonth,
   };
 }
 
@@ -190,7 +189,7 @@ export async function recordUsageEvent(data: {
       method: data.method,
       statusCode: data.statusCode,
       latencyMs: data.latencyMs,
-      metadata: data.metadata || undefined,
+      metadata: data.metadata as any,
     },
   });
 }

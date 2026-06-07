@@ -11,7 +11,7 @@ function getStripe(): Stripe {
     if (!STRIPE_SECRET_KEY) {
       throw new Error('STRIPE_SECRET_KEY is not set');
     }
-    stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2025-02-24-acacia' });
+    stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2025-02-24-acacia' as any });
   }
   return stripe;
 }
@@ -145,6 +145,7 @@ export async function ensureFreeSubscription(userId: string, email: string): Pro
     data: {
       userId,
       stripeCustomerId: customerId,
+      stripePriceId: '',
       stripeCurrentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       status: SubscriptionStatus.ACTIVE,
       tier: Tier.FREE,

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { getUsageMetrics, getUsageQuotas } from '../services/metrics.js';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/usage', requireAuth, async (req: Request, res: Response) => {
   try {

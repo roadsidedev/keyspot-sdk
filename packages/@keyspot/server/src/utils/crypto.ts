@@ -24,7 +24,7 @@ export function verifyApiKey(plaintext: string, hash: string): boolean {
 
 export function getApiKeyPrefix(key: string): string | null {
   const match = key.match(/^([a-z0-9]+)_.+$/);
-  return match ? match[1] : null;
+  return match ? match[1] ?? null : null;
 }
 
 export function generateToken(bytes: number = 32): string {

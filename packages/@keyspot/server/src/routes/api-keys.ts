@@ -4,7 +4,7 @@ import { requireAuth } from '../middleware/requireAuth.js';
 import { createKey, listKeys, revokeKey } from '../services/apiKey.js';
 import { getUsageMetrics } from '../services/metrics.js';
 
-const router = Router();
+const router: Router = Router();
 
 const createKeySchema = z.object({
   name: z.string().min(1).max(100),
@@ -49,7 +49,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    await revokeKey(req.params.id, req.user!.id);
+    await revokeKey(req.params.id!, req.user!.id);
     res.json({ success: true });
   } catch (err: any) {
     if (err.message?.includes('not found')) {

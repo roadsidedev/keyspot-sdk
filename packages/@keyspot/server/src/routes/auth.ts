@@ -8,7 +8,7 @@ import { ensureFreeSubscription } from '../services/stripe.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 
-const router = Router();
+const router: Router = Router();
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production');
 const ACCESS_TOKEN_EXPIRY = '15m';

@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma.js';
 import { createCheckoutSession, createPortalSession, getPriceIdFromTier } from '../services/stripe.js';
 import { Tier } from '@prisma/client';
 
-const router = Router();
+const router: Router = Router();
 
 router.post('/create-checkout', requireAuth, async (req: Request, res: Response) => {
   try {
