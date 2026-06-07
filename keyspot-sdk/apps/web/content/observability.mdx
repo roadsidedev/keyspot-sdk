@@ -1,0 +1,53 @@
+---
+title: Observability
+description: Tracing, telemetry, and Prometheus metrics
+---
+
+# Observability
+
+KeySpot includes three tracing tiers — from zero-overhead noop to full OpenTelemetry.
+
+## ConsoleTracer
+
+```typescript
+import { ConsoleTracer, setGlobalTracer } from '@roadsidelab/keyspot-sdk';
+
+setGlobalTracer(new ConsoleTracer('keyspot'));
+// Logs span start/end with duration in milliseconds
+```
+
+## KeySpotTracer
+
+Wraps core operations (`checkpoint`, `scan`, `vault.write`) with span timing. Active by default — falls back to a noop tracer if none is configured.
+
+## OtelTracer
+
+Auto-bridges to `@opentelemetry/api` when available. Spans are exported as `keyspot.{operation}`.
+
+```typescript
+const guard = new KeySpot({
+  enableOpenTelemetry: true,
+});
+```
+
+## Span Interface
+
+```typescript
+interface Span {
+  end(): void;
+  setAttribute(key: string, value: string | number | boolean): void;
+  addEvent(name: string, attributes?: Record<string, unknown>): void;
+}
+```
+
+## Server Metrics (Prometheus)
+
+The `@roadsidelab/keyspot-server` package exposes Prometheus-format metrics at `/metrics`:
+
+- `checkpoint_total` — checkpoint count
+- `checkpoint_duration_ms` — checkpoint latency histogram
+- `scan_total` — scan count
+- `secrets_found_total` — secrets detected
+- `vault_writes_total` — vault writes
+- `prompt_validation_total` — PromptShield evaluations
+- `http_request_duration_ms` — HTTP request latency

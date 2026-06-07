@@ -2,13 +2,40 @@
   "index": "Overview",
   "installation": "Installation",
   "quick-start": "Quick Start",
+  "--- Core": {
+    "type": "separator",
+    "title": "Core"
+  },
   "concepts": "Core Concepts",
   "api-reference": "API Reference",
+  "scanner": "Scanner",
+  "taint-engine": "Taint Engine",
+  "promptshield": "PromptShield",
+  "checkpoint-system": "Checkpoint System",
+  "--- Storage": {
+    "type": "separator",
+    "title": "Storage"
+  },
   "vault-adapters": "Vault Adapters",
+  "audit-compliance": "Audit & Compliance",
   "--- Integrations": {
     "type": "separator",
     "title": "Integrations"
   },
   "integrations": "Framework Integrations",
-  "cli": "CLI"
+  "vector-store-adapters": "Vector Store Adapters",
+  "cli": "CLI",
+  "--- Deploy": {
+    "type": "separator",
+    "title": "Deploy"
+  },
+  "observability": "Observability",
+  "pricing-deployment": "Pricing & Deployment",
+  "security-architecture": "Security Architecture",
+  "threat-model": "Threat Model",
+  "--- Other": {
+    "type": "separator",
+    "title": "Other"
+  },
+  "python-sdk": "Python SDK"
 }

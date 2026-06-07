@@ -1,0 +1,50 @@
+---
+title: Taint Engine
+description: Track derived secrets across transformations
+---
+
+# Taint Engine
+
+When `taintEnabled: true` (the default), the Taint Engine tracks secrets that have been transformed — summaries, embeddings, redacted copies. If a derived value appears in a later checkpoint, it is caught and redacted.
+
+## Usage
+
+```typescript
+const taint = guard.getTaintEngine();
+
+// Tag a derived value — mark it as originating from a secret
+taint.tag('summary of sk-123', 'sec_abc123', 'manual');
+
+// Later, when this value appears in state, it is caught
+const clean = await guard.checkpoint({
+  summary: 'summary of sk-123'  // ← tainted, will be vaulted
+});
+```
+
+## Propagation Rules
+
+| Operation | Taint behaviour |
+|-----------|-----------------|
+| Direct assignment | Taint preserved |
+| String concatenation | Result tainted if any operand is tainted |
+| JSON.parse / JSON.stringify | Taint metadata survives round-trip |
+| Object spread | Nested tainted values remain tainted |
+
+Both the vault reference token and the original secret are tagged — taint tracking catches "secret laundering" whether the agent uses the ref or the original value.
+
+## API
+
+```typescript
+tag(value: any, secretId: string, source?: string): void
+getTaints(value: any): TaintMetadata[]
+propagate(sources: any[], derived: any): void
+untaint(value: any): void
+```
+
+```typescript
+interface TaintMetadata {
+  secretId: string;
+  source: string;
+  timestamp: number;
+}
+```

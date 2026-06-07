@@ -1,13 +1,21 @@
 ---
 title: Overview
-description: Runtime security layer for autonomous AI agents
+description: Runtime credential hygiene for autonomous AI agents
 ---
 
 # KeySpot SDK
 
 **Runtime credential hygiene for autonomous AI agents.**
 
-KeySpot SDK enforces a **Checkpoint → Scan → Taint → Vault → Replace → Continue** lifecycle at every critical boundary. Secrets never persist in agent memory — they are replaced with HMAC-signed vault references.
+KeySpot SDK enforces a **Checkpoint → Scan → Vault → Replace → Continue** lifecycle at every critical boundary. Secrets never persist in agent memory — they are replaced with HMAC-signed vault references.
+
+```
+1. Checkpoint fires    → At a session boundary, memory save, or tool call
+2. Isolated scan       → Fresh Worker thread scans state against 40+ patterns
+3. Vault write         → Every matched secret is written to your vault adapter
+4. State sanitised     → Clean state returned; Worker terminates immediately
+5. Audit logged        → Outcome only — never the secret
+```
 
 ## Core Principle
 
@@ -17,26 +25,28 @@ When a secret is detected during a checkpoint, it is immediately written to your
 
 ## What KeySpot Catches
 
-| Category              | Examples                                      |
-|-----------------------|-----------------------------------------------|
-| Crypto private keys   | Ethereum, Solana, Bitcoin WIF, BIP-32 xpriv   |
-| Seed phrases          | BIP-39 (12/24 words) with entropy validation  |
-| AI provider keys      | OpenAI, Anthropic, HuggingFace                |
-| Cloud credentials     | AWS, GCP, Azure service accounts              |
-| Source control        | GitHub, GitLab, npm tokens                    |
-| Payment processors    | Stripe secret + restricted keys               |
-| Databases             | PostgreSQL, MySQL, MongoDB, Redis             |
-| Auth tokens           | JWTs, Bearer tokens, high-entropy tokens      |
+| Category | Examples |
+|----------|----------|
+| Crypto private keys | Ethereum/EVM keys, Solana keypairs, PEM keys (RSA, EC, Ed25519, PGP, OpenSSH) |
+| AI provider keys | OpenAI (standard + project), Anthropic, Google/Gemini, HuggingFace, Replicate, Cohere |
+| Cloud credentials | AWS access key + secret + session, GCP service accounts, Azure connection strings, DigitalOcean |
+| Source control | GitHub (classic + app), GitLab PATs, npm tokens |
+| Payment processors | Stripe live + test keys |
+| Databases | PostgreSQL, MySQL, MongoDB, Redis connection URLs |
+| Comms & infra | Twilio, SendGrid, Mailgun, Mailchimp, HubSpot, Slack tokens + webhooks, Discord, PagerDuty |
+| Auth & tokens | JWT, Google OAuth refresh, Firebase, Dropbox, Cloudflare, Linear, Notion, Shopify, Heroku, Docker Hub |
+| PII | Credit card numbers, US Social Security Numbers |
+| Tainted derivations | Summaries, embeddings, or transformed copies of any of the above |
 
 ## Architecture
 
 KeySpot runs security checks in isolated worker threads so your main agent loop is never blocked. Every secret match is:
 
 1. Written to your vault adapter
-2. Replaced with a signed reference
-3. Logged for audit (outcome only)
+2. Replaced with a signed reference token (`vault:v1:{id}:{hmac}:{expiry}`)
+3. Logged for audit (outcome only — no secrets recorded)
 
-This gives you **zero-knowledge execution** while maintaining full compliance and observability.
+Taint tracking propagates to derived values. PromptShield blocks jailbreaks before they reach the LLM.
 
 ## Next Steps
 

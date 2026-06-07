@@ -5,53 +5,67 @@ description: Store secrets in different backends
 
 # Vault Adapters
 
-All vault adapters are available from the main `@roadsidelab/keyspot-sdk` package:
+All vault adapters implement the `VaultAdapter` interface and are available from the main `@roadsidelab/keyspot-sdk` package.
 
 ```typescript
-import { InMemoryVaultAdapter, EnvVaultAdapter, DotEnvVaultAdapter } from '@roadsidelab/keyspot-sdk';
+import { InMemoryVaultAdapter, AWSSecretsAdapter } from '@roadsidelab/keyspot-sdk';
 ```
 
-## In-Memory (default for testing)
+## VaultAdapter Interface
+
+```typescript
+interface VaultAdapter {
+  write(secret: string, options?: VaultWriteOptions): Promise<string>;
+  read(id: string, agentId?: string): Promise<string | null>;
+  list(): Promise<string[]>;
+  delete(id: string): Promise<boolean>;
+  generateRef(id: string, secret: string, ttl?: number): string;
+  verifyRef(ref: string): boolean;
+}
+
+interface VaultWriteOptions {
+  visibleTo?: string[];         // ACL: agent IDs or wallet addresses
+  ttl?: number;                  // Time-to-live in milliseconds
+  tags?: Record<string, string>;
+  rotationHook?: (id: string, secret: string) => Promise<string>;
+}
+```
+
+## BaseVaultAdapter
+
+Shared HMAC signing infrastructure. `generateRef()` creates time-bound tokens in the format `vault:v1:{id}:{hmac}:{expiry}`. `verifyRef()` checks the HMAC signature and TTL in one call.
+
+## InMemoryVaultAdapter (default)
 
 ```typescript
 const vault = new InMemoryVaultAdapter();
 ```
 
-## Environment Variables
+Stores secrets in memory with TTL expiry and ACL enforcement. All data is lost on process exit — use for development and sandboxed environments.
+
+## AWSSecretsAdapter
 
 ```typescript
-const vault = new EnvVaultAdapter({
-  prefix: 'KEYSPOT_'
-});
-```
-
-## Dotenv Files
-
-```typescript
-const vault = new DotEnvVaultAdapter({
-  path: '.env.vault'
-});
-```
-
-## HashiCorp Vault
-
-```typescript
-import { HashiCorpVaultAdapter } from '@roadsidelab/keyspot-sdk';
-
-const vault = new HashiCorpVaultAdapter({
-  address: 'https://vault.company.com',
-  token: process.env.VAULT_TOKEN,
-  namespace: 'keyspot'
-});
-```
-
-## AWS Secrets Manager
-
-```typescript
-import { AWSSecretsAdapter } from '@roadsidelab/keyspot-sdk';
-
 const vault = new AWSSecretsAdapter({
   region: 'us-east-1',
-  prefix: 'keyspot/'
 });
+```
+
+Requires `@aws-sdk/client-secrets-manager` and valid AWS credentials. Secrets are stored with a `keyspot/secret/` prefix.
+
+## Custom Adapter
+
+Extend `BaseVaultAdapter` — `generateRef()` and `verifyRef()` are inherited.
+
+```typescript
+import { BaseVaultAdapter, VaultWriteOptions } from '@roadsidelab/keyspot-sdk';
+
+export class MyVaultAdapter extends BaseVaultAdapter {
+  async write(secret: string, options?: VaultWriteOptions): Promise<string> {
+    const id = `my_${Date.now()}`;
+    await myBackend.set(id, secret, options);
+    return id;
+  }
+  // implement read(), list(), delete()
+}
 ```

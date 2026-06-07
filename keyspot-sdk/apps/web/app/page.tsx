@@ -1,7 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import { Copy, ExternalLink, GitBranch, BookOpen, CreditCard } from "lucide-react";
+import {
+  Copy, ExternalLink, GitBranch, BookOpen, CreditCard,
+  Shield, Sparkles, FileSearch, Lock, Eye, Brain, Cpu
+} from "lucide-react";
+
+const features = [
+  {
+    icon: FileSearch,
+    title: "40+ Built-in Patterns",
+    desc: "Detect API keys, crypto private keys, cloud credentials, DB URLs, JWTs, and more — across Web2 and Web3.",
+  },
+  {
+    icon: Lock,
+    title: "Vault & Replace",
+    desc: "Secrets are replaced with HMAC-signed vault references. The agent never holds a raw secret.",
+  },
+  {
+    icon: Sparkles,
+    title: "Taint Tracking",
+    desc: "Derived summaries, embeddings, or transformed copies of secrets are caught and redacted automatically.",
+  },
+  {
+    icon: Eye,
+    title: "PromptShield",
+    desc: "18 jailbreak detection rules block prompt injection, system extraction, and tool abuse before they reach the LLM.",
+  },
+  {
+    icon: Cpu,
+    title: "Worker Isolation",
+    desc: "Every scan runs in an isolated thread or V8 sandbox. Your main loop is never blocked or exposed.",
+  },
+  {
+    icon: Shield,
+    title: "Audit & Compliance",
+    desc: "Hash-chained, Ed25519-signed audit logs. Optionally anchored to Base blockchain. Zero secrets ever logged.",
+  },
+];
 
 export default function KeySpotLanding() {
   return (
@@ -29,12 +65,12 @@ export default function KeySpotLanding() {
           RUNTIME SECURITY FOR AI AGENTS
         </div>
 
-        <h1 className="text-6xl font-semibold tracking-tighter leading-none mb-4">
-          Secrets never<br />persist in agent memory.
+        <h1 className="text-5xl md:text-6xl font-semibold tracking-tighter leading-none mb-4">
+          An agent should never hold<br />a secret longer than it needs to.
         </h1>
 
         <p className="max-w-md mx-auto text-lg text-zinc-600 dark:text-zinc-400 mt-6">
-          Checkpoint → Scan → Taint → Vault → Replace. Enforced at every boundary.
+          Checkpoint → Scan → Vault → Replace → Continue. Enforced at every critical boundary.
         </p>
 
         {/* Install Command */}
@@ -73,20 +109,66 @@ export default function KeySpotLanding() {
       {/* What it catches */}
       <div className="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-5xl mx-auto px-6 py-16">
-          <div className="text-xs uppercase tracking-[3px] text-zinc-500 dark:text-zinc-400 mb-4">COVERS</div>
+          <div className="text-xs uppercase tracking-[3px] text-zinc-500 dark:text-zinc-400 mb-6">COVERS</div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 text-sm">
             {[
-              "OpenAI / Anthropic keys",
-              "AWS, GCP, Azure secrets",
-              "Private keys & seed phrases",
-              "Database connection strings",
-              "GitHub / GitLab tokens",
-              "Stripe / payment keys",
-              "JWTs & bearer tokens",
-              "PEM certificates",
+              "OpenAI / Anthropic / Google / Cohere keys",
+              "AWS, GCP, Azure cloud secrets",
+              "Ethereum, Solana, PEM private keys",
+              "Postgres, MySQL, Mongo, Redis URLs",
+              "GitHub / GitLab / npm tokens",
+              "Stripe / Twilio / SendGrid keys",
+              "Slack, Discord, HubSpot, PagerDuty tokens",
+              "JWT, Cloudflare, DigitalOcean, Notion tokens",
+              "US SSNs and credit card numbers",
+              "Docker Hub, Shopify, Linear, Dropbox tokens",
+              "Firebase, Heroku, Mailgun, Mailchimp keys",
+              "Tainted derivations (summaries, embeddings)",
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400">
-                <div className="h-px w-4 bg-zinc-300 dark:bg-zinc-700" /> {item}
+                <div className="h-px w-4 bg-zinc-300 dark:bg-zinc-700 shrink-0" /> <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="border-t border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-5xl mx-auto px-6 py-16">
+          <div className="text-xs uppercase tracking-[3px] text-zinc-500 dark:text-zinc-400 mb-8">WHY KEYSPOT</div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900">
+                      <Icon className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                    </div>
+                    <div className="font-medium text-sm">{f.title}</div>
+                  </div>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Supported platforms */}
+      <div className="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+        <div className="max-w-5xl mx-auto px-6 py-16">
+          <div className="text-xs uppercase tracking-[3px] text-zinc-500 dark:text-zinc-400 mb-8">WORKS WITH</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            {[
+              "LangChain", "Anthropic SDK", "OpenAI SDK", "OpenClaw",
+              "Hermes", "Manus", "Claude Code", "Express",
+              "Pinecone", "Chroma", "Qdrant", "Weaviate",
+              "LanceDB", "Milvus", "Docker (self-host)", "Python 3.10+",
+            ].map((item) => (
+              <div key={item} className="px-4 py-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300">
+                {item}
               </div>
             ))}
           </div>
@@ -96,7 +178,7 @@ export default function KeySpotLanding() {
       {/* Footer */}
       <footer className="border-t border-zinc-200 dark:border-zinc-800 mt-auto">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-          <div>MIT License • Open source</div>
+          <div>MIT License &bull; Open source</div>
           <a href="https://github.com/roadsidedev/keyspot-sdk" className="flex items-center gap-1.5 hover:text-zinc-700 dark:hover:text-zinc-300">
             <GitBranch className="h-3.5 w-3.5" /> roadsidedev/keyspot-sdk
           </a>

@@ -1,0 +1,48 @@
+---
+title: Vector Store Adapters
+description: Auto-sanitise documents before they reach the vector database
+---
+
+# Vector Store Adapters
+
+All six adapters intercept writes before secrets persist to the vector database. Each adapter runs `guard.checkpoint()` on every document before forwarding the write.
+
+```typescript
+import { PineconeAdapter } from '@roadsidelab/keyspot-sdk/adapters';
+
+const adapter = new PineconeAdapter(guard);
+const safeIndex = adapter.wrap(pineconeIndex);
+await safeIndex.upsert(records);  // documents sanitised before upsert
+```
+
+## Supported Stores
+
+| Store | Adapter Class | Intercepted Method |
+|-------|--------------|-------------------|
+| Pinecone | `PineconeAdapter` | `index.upsert()` |
+| Chroma | `ChromaAdapter` | `collection.add()` |
+| Qdrant | `QdrantAdapter` | `client.upsert()` |
+| Weaviate | `WeaviateAdapter` | `client.data.creator().do()` |
+| LanceDB | `LanceDBAdapter` | `table.add()` |
+| Milvus | `MilvusAdapter` | `client.insert()` |
+
+## How It Works
+
+Each adapter extends `BaseVectorStoreAdapter`:
+
+```typescript
+abstract class BaseVectorStoreAdapter implements VectorStoreAdapter {
+  constructor(protected guard: KeySpot) {}
+
+  abstract wrap(store: any): any;
+
+  protected async sanitizeDocuments<T>(documents: T[]): Promise<T[]> {
+    // Each document goes through guard.checkpoint() before write
+    for (const doc of documents) {
+      await this.guard.checkpoint(doc);
+    }
+  }
+}
+```
+
+If a document contains a secret, the vault reference token is stored in the vector DB instead of the plaintext value.

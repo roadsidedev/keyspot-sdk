@@ -1,0 +1,73 @@
+---
+title: Checkpoint System
+description: How checkpoints scan, vault, and replace secrets in agent state
+---
+
+# Checkpoint System
+
+Checkpoints are the integration points where KeySpot intercepts agent state. You configure which triggers fire at construction, then call `guard.checkpoint(state)` whenever you want to sanitise state.
+
+## Configuration
+
+```typescript
+const guard = new KeySpot({
+  checkpointTriggers: new Set([
+    CheckpointTrigger.SCAN,
+    CheckpointTrigger.VAULT_WRITE,
+    CheckpointTrigger.TAINT_REDACT,
+    CheckpointTrigger.PROMPT_VALIDATION,
+    CheckpointTrigger.BEFORE_EMBED,
+  ]),
+  onCheckpointTrigger: async (trigger, context) => {
+    console.log(`[KeySpot] Trigger ${trigger} fired`, context);
+  },
+});
+```
+
+## The Checkpoint Flow
+
+```
+guard.checkpoint(state)
+  │
+  ├─ emitTrigger(SCAN)
+  ├─ audit.log('checkpoint_start')
+  ├─ scanner.scan(state)
+  │    │
+  │    ├─ for each pattern match:
+  │    │   ├─ emitTrigger(VAULT_WRITE)
+  │    │   ├─ vault.write(secret)         → vaultId
+  │    │   ├─ vault.generateRef(vaultId)  → "vault:v1:..."
+  │    │   ├─ taintEngine.tag(ref, secretId)
+  │    │   └─ replaceAtPath(state, ref)
+  │    │
+  │    └─ for each tainted value:
+  │        ├─ replaceAtPath(state, '[REDACTED TAINTED CONTENT]')
+  │        └─ audit.log('taint_redacted')
+  │
+  ├─ audit.log('checkpoint_end')
+  └─ return cleanState
+```
+
+## Wrap
+
+`guard.wrap()` is a convenience that auto-checkpoints:
+
+```typescript
+const result = await guard.wrap(async (state) => {
+  return await llm.generate(state);
+}, initialState);
+// 1. Checkpoints initialState
+// 2. Executes the function
+// 3. Checkpoints the return value
+```
+
+## Prune Strategies in Action
+
+```typescript
+const guard = new KeySpot({
+  pruneStrategy: PrunerStrategy.VAULT_WITH_TAINT,
+});
+
+await guard.checkpoint({ openai_key: 'sk-proj-abc123...' });
+// openai_key → "vault:v1:vault_a3f9b2:d7e2f4a9...:1717500000000"
+```

@@ -1,0 +1,18 @@
+---
+title: Threat Model
+description: Security threats and their mitigations
+---
+
+# Threat Model
+
+| Threat | Mitigation |
+|--------|------------|
+| Secrets in agent memory | Vault + reference tokens at every checkpoint |
+| Prompt injection / jailbreaks | PromptShield (18 rules, configurable) |
+| Derived secret laundering | Taint propagation tracking |
+| Worker thread compromise | Process isolation + timeout + memory disposal |
+| Audit log tampering | SHA-256 hash chain + Ed25519 signatures + blockchain anchoring |
+| Supply chain (patterns) | `PatternRegistry.loadFromUrl` with live update capability |
+| Partial streaming coverage | 2048-char rolling window catches cross-chunk secrets |
+| Credential rotation pre-vault | `rotationHook` — rotate before the secret is stored |
+| Observability data leak | Outcome-only audit schema — never the secret |

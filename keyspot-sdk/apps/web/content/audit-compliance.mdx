@@ -1,0 +1,79 @@
+---
+title: Audit & Compliance
+description: Hash-chained audit logs with Ed25519 signing and blockchain anchoring
+---
+
+# Audit & Compliance
+
+## AuditLogger (in-memory)
+
+Every checkpoint produces hash-chained audit entries. Each entry links to the SHA-256 hash of the previous entry — tampering with a historical entry breaks every subsequent hash.
+
+```typescript
+import { AuditLogger } from '@roadsidelab/keyspot-sdk';
+
+const logger = new AuditLogger();
+
+const entry = logger.log({ type: 'checkpoint', matchesFound: 3 });
+// { event: { ... }, timestamp, prevHash, hash }
+
+// Verify chain integrity
+const valid = logger.verifyChain(logger.getEntries());
+```
+
+**What is never logged:** secret values, pattern IDs, field paths, agent identifiers, vault references — only outcomes.
+
+```json
+{
+  "event": { "type": "checkpoint_end", "matchesFound": 2 },
+  "timestamp": 1717500000000,
+  "prevHash": "a3f9b2c1...",
+  "hash": "d7e2f4a9..."
+}
+```
+
+## PersistedAuditLogger (file-backed + Ed25519-signed)
+
+For forensic-grade audit trails:
+
+```typescript
+import {
+  PersistedAuditLogger,
+  generateSigningKeyPair,
+} from '@roadsidelab/keyspot-sdk';
+
+const kp = generateSigningKeyPair();  // Ed25519
+const logger = new PersistedAuditLogger({
+  logDir: './audit-logs',
+  signingKeyPair: kp,
+});
+
+// Log with Ed25519 signature and cumulative chain root
+logger.logSigned({ type: 'checkpoint', stateSummary: 'object' });
+
+// Verify integrity of a log file
+const result = logger.verifyAgainstFile();
+// { valid: true, entries: 142, errors: [] }
+
+// Anchor the chain root to Base blockchain
+await logger.anchorToBase();
+
+logger.close();
+```
+
+## Compliance Utilities
+
+```typescript
+import {
+  generateSigningKeyPair,
+  signEntry,
+  verifyEntrySignature,
+} from '@roadsidelab/keyspot-sdk';
+
+// Generate Ed25519 keys
+const kp = generateSigningKeyPair();
+
+// Sign and verify audit entries
+const signature = signEntry(auditEntry, kp.privateKey);
+const valid = verifyEntrySignature(auditEntry, signature, kp.publicKey);
+```

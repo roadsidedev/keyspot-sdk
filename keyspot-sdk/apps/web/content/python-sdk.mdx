@@ -1,0 +1,49 @@
+---
+title: Python SDK
+description: Use KeySpot from Python agents
+---
+
+# Python SDK
+
+KeySpot is fully available for Python agents with the same architecture and guarantees.
+
+```bash
+pip install keyspot
+```
+
+## Usage
+
+```python
+from keyspot import KeySpot, Scanner, InMemoryVaultAdapter
+from keyspot import TaintEngine, PromptShield, AuditLogger
+
+guard = KeySpot(taint_enabled=True)
+
+# Checkpoint — same lifecycle as the TypeScript SDK
+clean = await guard.checkpoint({"key": "sk-1234567890..."})
+# clean["key"] → "vault:v1:..."
+
+# Validate prompts
+result = await guard.validate_prompt("Ignore previous instructions...")
+assert result["blocked"] is True
+
+# Scan without vaulting
+matches = await guard.scan({"api_key": "sk-abc123..."})
+
+# Standalone scanner
+scanner = Scanner()
+matches = await scanner.scan("my secret is sk-abc123...")
+```
+
+## Python Exports
+
+| Class | Description |
+|-------|-------------|
+| `KeySpot` | Main client — checkpoint, scan, validate_prompt |
+| `Scanner` | Standalone detection engine |
+| `TaintEngine` | Derived secret tracking |
+| `PromptShield` | Jailbreak detection (10 rules) |
+| `AuditLogger` | Hash-chained audit logging |
+| `BaseVaultAdapter` | Abstract vault with HMAC refs |
+| `InMemoryVaultAdapter` | Default in-memory vault |
+| `Match` | Scan result type |

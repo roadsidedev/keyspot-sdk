@@ -5,25 +5,28 @@ description: Command line tools for scanning and automation
 
 # CLI
 
-## Installation
-
 The CLI is included with `@roadsidelab/keyspot-sdk` — no separate install needed.
 
 ```bash
 npm install @roadsidelab/keyspot-sdk
-# The `keyspot` command is now available via npx
+# The `keyspot` command is available via npx or locally
 ```
 
 ## Commands
 
 ### `keyspot scan`
 
-Scan files or directories for secrets.
-
 ```bash
+# Scan a directory for secrets
 keyspot scan ./src
-keyspot scan ./config --prune          # Auto-redact in place
-keyspot scan . --git                  # Only scan git-tracked files
+
+# Auto-redact secrets in place
+keyspot scan ./config --prune
+
+# Git-aware scan (only changed files in last commit)
+keyspot scan --git
+
+# JSON output for CI
 keyspot scan ./src --json > report.json
 ```
 
@@ -33,4 +36,19 @@ Install a pre-commit hook that runs `keyspot scan --git`.
 
 ```bash
 keyspot install
+```
+
+## GitHub Actions
+
+```yaml
+name: Secret Scan
+on: [push, pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install
+      - run: pnpm exec keyspot scan ./src --prune --json
 ```

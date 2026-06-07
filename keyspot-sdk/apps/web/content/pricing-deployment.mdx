@@ -1,0 +1,77 @@
+---
+title: Pricing & Deployment
+description: Self-hosted Docker, x402 micropayments, and the Express server
+---
+
+# Pricing & Deployment
+
+## Self-Hosted (Docker)
+
+```bash
+docker build -t keyspot .
+docker run -p 3000:3000 -e PAY_TO_ADDRESS=0x... keyspot
+
+# Health check
+curl http://localhost:3000/health
+
+# Checkpoint API
+curl -X POST http://localhost:3000/checkpoint \
+  -H 'Content-Type: application/json' \
+  -d '{"state": {"key": "sk-123..."}}'
+
+# Metrics
+curl http://localhost:3000/metrics
+```
+
+Self-hosted is fully free. The x402 payment server is built in — set `PAY_TO_ADDRESS` to enable it.
+
+## x402 Micropayments (Hosted)
+
+KeySpot uses the **x402 HTTP micropayment standard** — USDC on Base, per-call pricing, no subscriptions.
+
+```
+Agent                              KeySpot Server
+  ├── POST /v1/checkpoint ─────────────> │
+  │ <── 402 Payment Required ────────── │
+  │     { amount: "0.005",              │
+  │       currency: "USDC",              │
+  │       network: "base",               │
+  │       payTo:   "0x..." }             │
+  │                                      │
+  ├── [agent pays on Base] ───────────> │
+  ├── POST /v1/checkpoint ─────────────> │
+  │     X-Payment: { txHash: "0x..." }   │
+  │ <── 200 { cleanState: {...} } ───── │
+```
+
+Client-side:
+
+```typescript
+const guard = new KeySpot({
+  hosted: {
+    enabled: true,
+    agentWalletAddress: '0xYourAgentWallet',
+    facilitatorUrl: 'https://api.keyspot.dev',
+  },
+});
+```
+
+## Express Server
+
+```typescript
+import { createApp } from '@roadsidelab/keyspot-server';
+
+const app = createApp({
+  guard,
+  payment: {
+    enabled: true,
+    network: 'base',
+    currency: 'USDC',
+    payTo: process.env.TREASURY_ADDRESS,
+    pricing: { checkpoint: '0.005', scan: '0.001' },
+    freeQuota: 100,
+  },
+});
+
+app.listen(3000);
+```

@@ -1,0 +1,77 @@
+---
+title: Scanner
+description: The detection engine — regex, entropy, Aho-Corasick, and contextual scoring
+---
+
+# Scanner
+
+The Scanner is KeySpot's detection engine — four techniques working together:
+
+1. **Regex patterns** — 40+ curated regexes for structured secrets (API keys, private keys, connection strings)
+2. **Entropy analysis** — built into the regex patterns (high-entropy tokens are targeted)
+3. **Aho-Corasick trie** — fast multi-pattern keyword matching inside `PatternRegistry`
+4. **Contextual path scoring** — boosts confidence for `config.*`, `env.*`, `secret.*` paths; penalizes `chat.*`, `message.*`, `memory.*`
+
+```typescript
+import { Scanner } from '@roadsidelab/keyspot-sdk';
+
+const scanner = new Scanner({
+  patterns: myCustomPatterns,
+  deepScan: true,
+  includeBase64: true,
+  taintEnabled: true,
+});
+
+const matches = await scanner.scan(agentMessages);
+```
+
+## Streaming Scan
+
+For large or ongoing inputs, the scanner uses a **2048-character rolling window**. This catches secrets that arrive across multiple chunks.
+
+```typescript
+const first = await scanner.scanStream('The key is sk-proj-');
+const second = await scanner.scanStream('abc123def456...');
+scanner.resetStream();  // Start fresh
+```
+
+## Match Result
+
+```typescript
+interface Match {
+  type:             string;    // e.g. 'openai_api_key'
+  severity:         string;    // 'critical' | 'high' | 'medium' | 'low'
+  path:             string;    // e.g. 'messages[2].content'
+  redacted:         string;    // 'sk-...bc12' or '[TAINTED CONTENT]'
+  confidence:       number;    // 0–1 (adjusted for path context)
+  secretId?:        string;    // Unique ID for this match
+  sourceSecretIds?: string[];  // For tainted content — originating secret IDs
+  rawValue?:        string;    // ⚠️ Plaintext — never log or persist
+}
+```
+
+## Pattern Registry
+
+```typescript
+import { PatternRegistry } from '@roadsidelab/keyspot-sdk';
+
+const registry = new PatternRegistry();
+
+registry.register({
+  name:        'my_custom_token',
+  regex:       /my_[a-z0-9]{32}/,
+  severity:    'high',
+  description: 'My Service Token',
+});
+
+// Remote pattern updates for fleet-wide rollouts
+await registry.loadFromUrl('https://cdn.example.com/patterns.json');
+```
+
+## Built-in Patterns (40+)
+
+The full list is in `packages/@keyspot/patterns/src/built-in.ts`. Categories include:
+
+- **Critical:** Ethereum private keys, Solana private keys, PEM keys (RSA, EC, Ed25519, PGP, OpenSSH), PostgreSQL/MySQL/MongoDB URLs
+- **High:** OpenAI key types, Anthropic, Google/Gemini, HuggingFace, Replicate, Cohere, AWS/GCP/Azure credentials, GitHub/GitLab/npm tokens, Stripe live, Twilio, SendGrid, Slack, Discord, HubSpot, PagerDuty, Redis, credit cards, SSNs, and more
+- **Medium:** Stripe test keys, Sentry DSN, JWT tokens, Firebase database URLs

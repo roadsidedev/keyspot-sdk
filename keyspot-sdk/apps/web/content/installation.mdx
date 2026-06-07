@@ -5,24 +5,30 @@ description: How to install KeySpot SDK
 
 # Installation
 
-KeySpot SDK is published as a single package under the `@roadsidelab` scope. One install, everything included.
+KeySpot SDK is published as a single meta-package under the `@roadsidelab` scope. One install, everything you need.
 
 ```bash npm2yarn
 npm install @roadsidelab/keyspot-sdk
 ```
 
-## Package Overview
+## Import Paths
 
-| Import path | Description | Heavy deps? |
+| Import path | What you get | Heavy deps? |
 | --- | --- | --- |
-| `@roadsidelab/keyspot-sdk` | KeySpot, Scanner, TaintEngine, PromptShield, Vault, Audit | No |
-| `@roadsidelab/keyspot-sdk/adapters` | Vector store adapters (Chroma, Pinecone, Qdrant, etc.) | Yes* |
-| `@roadsidelab/keyspot-sdk/frameworks` | Framework wrappers (LangChain, Anthropic, OpenAI) | No |
+| `@roadsidelab/keyspot-sdk` | KeySpot, Scanner, TaintEngine, PromptShield, Vault, Audit — all core | No |
+| `@roadsidelab/keyspot-sdk/adapters` | Vector store adapters (Chroma, Pinecone, Qdrant, Weaviate, LanceDB, Milvus) | Yes* |
+| `@roadsidelab/keyspot-sdk/frameworks` | Framework wrappers (LangChain, Anthropic, OpenAI, OpenClaw, Hermes) | No |
 | `@roadsidelab/keyspot-sdk/cli` | CLI commands (`keyspot scan`) | No |
 
-*\* Heavy deps are optional — only downloaded if you use `/adapters`.*
+*\* Heavy deps are lazy — only downloaded if you use `/adapters`.*
 
 ## Requirements
 
 - **Node.js** ≥ 18
-- **TypeScript** ≥ 5.0 (recommended)
+- **TypeScript** ≥ 5.0 (recommended for full type safety)
+
+## Python SDK
+
+```bash
+pip install keyspot
+```

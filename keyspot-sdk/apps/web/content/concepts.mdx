@@ -1,56 +1,82 @@
 ---
 title: Core Concepts
-description: Understanding checkpoints, taint tracking, and vault references
+description: Understanding checkpoints, prune strategies, taint tracking, and vault references
 ---
 
 # Core Concepts
 
-## Checkpoint
+## Checkpoint Triggers
 
-A **checkpoint** is any point where agent state is about to be persisted, summarized, or passed to another system. Examples:
+KeySpot intercepts agent state at well-defined triggers:
 
-- Before/after LLM calls
-- Tool execution boundaries
-- Memory save points
-- Agent-to-agent handoff
-- Session end / context compression
+| Trigger | When it fires |
+|---------|---------------|
+| `SCAN` | Every checkpoint scans state for secrets |
+| `VAULT_WRITE` | Before writing a matched secret to the vault |
+| `TAINT_REDACT` | When tainted content (derived from a secret) is found |
+| `PROMPT_VALIDATION` | Each time `validatePrompt()` runs |
+| `BEFORE_EMBED` | Before vector store document embedding |
 
-## Taint Tracking
+## Prune Strategies
 
-When a secret is detected, the field is marked as **tainted**. Any value derived from a tainted field (summaries, embeddings, rewrites) is also tracked.
+When a secret is detected, KeySpot applies one of four strategies:
 
-This prevents "paraphrased secret" leaks that simple regex scanners miss.
+| Strategy | Behaviour |
+|----------|-----------|
+| `VAULT_WITH_TAINT` (default) | Write to vault, inject reference token, taint-tag the ref |
+| `REDACT` | Replace with `[REDACTED]` — field still exists |
+| `REMOVE` | Delete the field entirely |
+| `REPLACE` | Replace with a configurable placeholder string |
+
+Configure at construction:
+
+```typescript
+const guard = new KeySpot({
+  pruneStrategy: PrunerStrategy.VAULT_WITH_TAINT,
+  placeholder: '[REDACTED]',
+});
+```
 
 ## Vault Reference
 
 Instead of the original secret, KeySpot returns a signed reference:
 
 ```
-vault:v1:<vault_id>:<hmac>:<expiry>
+vault:v1:{vault_id}:{hmac}:{expiry_timestamp}
 ```
 
 The reference is:
-
 - **Opaque** — reveals nothing about the secret
 - **Signed** — HMAC prevents tampering
 - **Expirable** — optional TTL per reference
 
-## PromptShield
+## Taint Tracking
 
-PromptShield runs an additional scan on the final prompt before it is sent to the model. This catches secrets that were introduced during reasoning or tool use.
+When `taintEnabled: true` (the default), any value derived from a vaulted secret is **tainted**. Direct copies inherit the taint. String concatenation with tainted values propagates it. JSON round-trips preserve it.
+
+This prevents "secret laundering" — an agent that transforms `sk-abc...` into a summary can't evade detection.
+
+## Contextual Confidence Scoring
+
+Not every high-entropy string is a real secret. KeySpot scores each match by its location in the object tree:
+
+- **`config.*`, `secret.*`, `token.*`, `credential.*`** → confidence boosted
+- **`log.*`, `debug.*`** → confidence penalized
+- **`chat.*`, `message.*`, `memory.*`** → confidence heavily penalized
+
+A match in `config.api_keys` has higher confidence than the same string in `chat.history[3].content`.
 
 ## Audit Logger
 
-Every checkpoint produces a minimal audit record:
+Every checkpoint produces a hash-chained audit entry:
 
 ```json
 {
-  "checkpoint": "llm_call",
-  "status": "SUCCESS",
-  "secretsFound": 2,
-  "taintedFields": 3,
-  "timestamp": 1717500000000
+  "event": { "type": "checkpoint_end", "matchesFound": 2 },
+  "timestamp": 1717500000000,
+  "prevHash": "a3f9b2c1...",
+  "hash": "d7e2f4a9..."
 }
 ```
 
-No secret values are ever logged.
+No secret values are ever logged. See [Audit & Compliance](/doc/audit-compliance) for Ed25519 signing and blockchain anchoring.

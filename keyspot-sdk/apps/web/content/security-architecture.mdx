@@ -1,0 +1,34 @@
+---
+title: Security Architecture
+description: Worker isolation, streaming buffer, contextual scoring, and audit chaining
+---
+
+# Security Architecture
+
+## Worker Pool Isolation
+
+KeySpot's `WorkerPool` supports three execution modes:
+
+| Mode | Isolation level | When used |
+|------|----------------|-----------|
+| `isolated-vm` | Full memory isolation via V8 isolate | Optional — install `isolated-vm` |
+| `worker_threads` | Process-level isolation via `Worker` | Default when worker script exists |
+| Inline | Same-process synchronous | Fallback when workers unavailable |
+
+Each scan cycle runs in a fresh or recycled sandbox. After completion, worker buffers are discarded and the thread is returned to the pool. Hard timeouts prevent runaway scans.
+
+## Streaming Buffer
+
+Large inputs are processed with a **2048-character rolling window**, preventing memory exhaustion and catching secrets that span chunk boundaries.
+
+## Buffer Zeroing
+
+After each scan, worker memory buffers are explicitly discarded before the thread is recycled, reducing the window for cold-boot or memory-dump attacks.
+
+## Contextual Confidence
+
+Not every match is a real secret. The scanner penalises paths like `chat.*`, `message.*`, `memory.*` and boosts `config.*`, `secret.*`, `credentials.*` — false positives are designed out, not filtered after the fact.
+
+## Hash-Chained Audit Logs
+
+Every audit entry links to the SHA-256 hash of the previous entry. Tampering with a historical entry breaks the chain. With `PersistedAuditLogger`, entries are Ed25519-signed and can be anchored to the Base blockchain.

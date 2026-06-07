@@ -8,32 +8,69 @@ description: Wrap popular AI frameworks with KeySpot
 Framework wrappers are available from `@roadsidelab/keyspot-sdk/frameworks`:
 
 ```typescript
-import { withKeySpot, wrapAnthropic, wrapOpenAI } from '@roadsidelab/keyspot-sdk/frameworks';
+import {
+  withKeySpot, wrapAnthropic, wrapOpenAI,
+  wrapOpenClawAgent, wrapHermesAgent,
+} from '@roadsidelab/keyspot-sdk/frameworks';
 ```
 
 ## LangChain
 
 ```typescript
 const guardedChain = withKeySpot(myChain, guard);
+const result = await guardedChain.invoke({ input: 'test' });
+// Runs the chain, checkpoints the output state
 ```
 
 ## Anthropic
 
 ```typescript
-const client = wrapAnthropic(anthropic, guard);
+const guarded = wrapAnthropic(anthropic, guard);
+const msg = await guarded.messages.create({
+  model: 'claude-opus-4-6',
+  max_tokens: 1024,
+  messages: [{ role: 'user', content: userInput }],
+});
 ```
 
 ## OpenAI
 
 ```typescript
-const client = wrapOpenAI(openai, guard);
+const guarded = wrapOpenAI(openai, guard);
+const completion = await guarded.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: userInput }],
+});
 ```
 
-## Self-Hosted Server
+## OpenClaw
 
-For self-hosted deployments with Express middleware, use the Docker image:
+```typescript
+const safeAgent = wrapOpenClawAgent(myOpenClawAgent, guard);
+const result = await safeAgent.run(input);
+```
+
+## Hermes
+
+```typescript
+const safeAgent = wrapHermesAgent(myHermesAgent, guard);
+const result = await safeAgent.run(input);
+```
+
+## Manus
+
+```typescript
+// Inside the Manus agent loop
+const { blocked } = await guard.validatePrompt(state.nextPrompt);
+if (blocked) throw new Error('Security Policy Violation');
+
+const result = await myManusAgent.think(state);
+const safeState = await guard.checkpoint(result);
+return safeState;
+```
+
+## Claude Code / CLI Agents
 
 ```bash
-docker build -t keyspot .
-docker run -p 3000:3000 keyspot
+keyspot scan --path ./agent_memory.json --prune
 ```
