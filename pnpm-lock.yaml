@@ -241,6 +241,12 @@ importers:
       chromadb:
         specifier: ^2.0.0
         version: 2.4.6(encoding@0.1.13)(ws@5.2.5)(zod@3.25.76)
+      lancedb:
+        specifier: ^0.10.0
+        version: 0.0.1
+      weaviate-ts-client:
+        specifier: ^3.0.0
+        version: 2.2.0(encoding@0.1.13)(graphql@16.14.1)
 
 packages:
 
