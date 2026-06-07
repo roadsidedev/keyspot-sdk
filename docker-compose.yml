@@ -1,22 +1,29 @@
 services:
   postgres:
     image: timescale/timescaledb:latest-pg16
+    container_name: keyspot-db
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: keyspot
       POSTGRES_PASSWORD: keyspot
       POSTGRES_DB: keyspot
+      # Auto-enable TimescaleDB on init
+      TIMESCALEDB_TELEMETRY: "off"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./packages/@keyspot/server/prisma/init-timescaledb.sql:/docker-entrypoint-initdb.d/01-init-timescaledb.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keyspot"]
+      test: ["CMD-SHELL", "pg_isready -U keyspot -d keyspot"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    container_name: keyspot-redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -24,16 +31,44 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
+  # Run once after postgres is healthy: pnpm db:migrate && pnpm db:seed
+  # Usage: docker compose run --rm db-setup
+  db-setup:
+    image: node:20-alpine
+    container_name: keyspot-db-setup
+    profiles:
+      - setup
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://keyspot:keyspot@postgres:5432/keyspot?schema=public"
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: >
+      sh -c "
+        npm install -g pnpm@9 &&
+        pnpm install &&
+        cd packages/@keyspot/server &&
+        DATABASE_URL=$$DATABASE_URL npx prisma migrate deploy &&
+        DATABASE_URL=$$DATABASE_URL npx prisma db seed
+      "
+
+  # Stripe CLI for webhook forwarding (start separately with --profile stripe)
   stripe-cli:
     image: stripe/stripe-cli:latest
+    container_name: keyspot-stripe
+    profiles:
+      - stripe
     command: "listen --forward-to host.docker.internal:3000/stripe/webhook --skip-verify"
     environment:
       STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    profiles:
-      - stripe
 
 volumes:
   pgdata:

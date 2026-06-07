@@ -16,7 +16,16 @@
     "docs": "typedoc",
     "docs:serve": "npx serve docs/api",
     "format": "prettier --write \"packages/*/src/**/*.ts\"",
-    "publish:npm": "pnpm publish -r --access public"
+    "publish:npm": "pnpm publish -r --access public",
+    "setup": "pnpm docker:up && pnpm db:setup && pnpm dev",
+    "docker:up": "docker compose up -d postgres redis",
+    "docker:down": "docker compose down",
+    "docker:stripe": "docker compose run --rm stripe-cli",
+    "db:setup": "pnpm --filter @roadsidelab/keyspot-server db:setup",
+    "db:reset": "pnpm --filter @roadsidelab/keyspot-server db:reset",
+    "start:server": "pnpm --filter @roadsidelab/keyspot-server dev",
+    "start:web": "pnpm --filter keyspot-web dev --port 3001",
+    "dev": "concurrently -n api,web -c cyan,magenta \"pnpm start:server\" \"pnpm start:web\""
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
