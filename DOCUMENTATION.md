@@ -68,37 +68,22 @@ KeySpot SDK is published as scoped packages under `@roadsidelab`. Install only w
 
 ### Minimum install
 
-For most use cases you only need the core package and a vault adapter:
+For most use cases you only need one package:
 
 ```bash
-# pnpm
-pnpm add @roadsidelab/keyspot-core @roadsidelab/keyspot-vault
-
-# npm
-npm install @roadsidelab/keyspot-core @roadsidelab/keyspot-vault
-
-# yarn
-yarn add @roadsidelab/keyspot-core @roadsidelab/keyspot-vault
-```
-
-### Full install
-
-```bash
-pnpm add @roadsidelab/keyspot-core @roadsidelab/keyspot-vault @roadsidelab/keyspot-adapters @roadsidelab/keyspot-x402 @roadsidelab/keyspot-server
-pnpm add -D @roadsidelab/keyspot-cli
+pnpm add @roadsidelab/keyspot-sdk
 ```
 
 ### Package overview
 
-| Package | Description | Required |
-|---------|-------------|----------|
-| `@roadsidelab/keyspot-core` | Scanner, Taint Engine, PromptShield, EphemeralPruner, CheckpointManager, AuditLogger, KeySpot SDK client | ✅ |
-| `@roadsidelab/keyspot-vault` | Vault adapters: env, dotenv, HashiCorp, AWS, InMemory | ✅ |
-| `@roadsidelab/keyspot-patterns` | Built-in pattern registry (bundled with core — install separately to extend) | optional |
-| `@roadsidelab/keyspot-adapters` | Framework bridges: Anthropic, OpenAI, LangChain, Express | optional |
-| `@roadsidelab/keyspot-x402` | x402 payment middleware (server) and agent client | optional |
-| `@roadsidelab/keyspot-server` | REST API server for hosted or self-hosted deployments | optional |
-| `@roadsidelab/keyspot-cli` | `keyspot scan`, `keyspot install` — install as dev dependency | dev |
+| Import path | Description | Heavy deps? |
+|-------------|-------------|-------------|
+| `@roadsidelab/keyspot-sdk` | Main entry - KeySpot, Scanner, TaintEngine, PromptShield, Vault, Audit, all core | No |
+| `@roadsidelab/keyspot-sdk/adapters` | Vector store adapters (Chroma, Pinecone, Qdrant, etc.) | Yes* |
+| `@roadsidelab/keyspot-sdk/frameworks` | Framework wrappers (LangChain, Anthropic, OpenAI) | No |
+| `@roadsidelab/keyspot-sdk/cli` | CLI commands (`keyspot scan`) | No |
+
+*\* Heavy deps are optional — only downloaded if you use `/adapters`.*
 
 ### Requirements
 
@@ -110,7 +95,7 @@ pnpm add -D @roadsidelab/keyspot-cli
 ## 3. Quick Start
 
 ```typescript
-import { KeySpot } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
 
 const guard = new KeySpot({
   taintEnabled: true,
@@ -286,7 +271,7 @@ For large inputs, the scanner uses a **2048-character rolling window** to detect
 ### Pattern Registry
 
 ```typescript
-import { PatternRegistry } from '@roadsidelab/keyspot-patterns';
+import { PatternRegistry } from '@roadsidelab/keyspot-sdk';
 
 const registry = PatternRegistry.createDefault();
 
@@ -422,7 +407,7 @@ Vault adapters provide the storage backend for secrets.
 ### In-Memory (default)
 
 ```typescript
-import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
+import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-sdk';
 
 const vault = new InMemoryVaultAdapter();
 const guard = new KeySpot({ vault });
@@ -486,7 +471,7 @@ Vector store adapters intercept write operations to automatically vault secrets 
 | Milvus | `client.insert` |
 
 ```typescript
-import { PineconeAdapter } from '@roadsidelab/keyspot-adapters/pinecone';
+import { PineconeAdapter } from '@roadsidelab/keyspot-sdk/adapters';
 
 const adapter = new PineconeAdapter(guard);
 const safeIndex = adapter.wrap(pineconeIndex);
@@ -510,7 +495,7 @@ const guard = new KeySpot({
 ### File Logger
 
 ```typescript
-import { FileAuditLogger } from '@roadsidelab/keyspot-core';
+import { FileAuditLogger } from '@roadsidelab/keyspot-sdk';
 
 const logger = new FileAuditLogger({
   logDir: './logs',
@@ -542,7 +527,7 @@ Audit entries include: timestamp, checkpoint trigger, outcome (SUCCESS/FAILED/ER
 ### LangChain
 
 ```typescript
-import { withKeySpot } from '@roadsidelab/keyspot-frameworks';
+import { withKeySpot } from '@roadsidelab/keyspot-sdk/frameworks';
 import { guard } from './guard';
 
 const guardedChain = withKeySpot(myChain, guard);
@@ -552,7 +537,7 @@ const result = await guardedChain.invoke({ input: '...' });
 ### Anthropic
 
 ```typescript
-import { wrapAnthropic } from '@roadsidelab/keyspot-frameworks/anthropic';
+import { wrapAnthropic } from '@roadsidelab/keyspot-sdk/frameworks';
 
 const guarded = wrapAnthropic(anthropic, guard);
 const msg = await guarded.messages.create({ ... });
@@ -561,7 +546,7 @@ const msg = await guarded.messages.create({ ... });
 ### OpenAI
 
 ```typescript
-import { wrapOpenAI } from '@roadsidelab/keyspot-frameworks/openai';
+import { wrapOpenAI } from '@roadsidelab/keyspot-sdk/frameworks';
 
 const guarded = wrapOpenAI(openai, guard);
 const completion = await guarded.chat.completions.create({ ... });
@@ -570,7 +555,7 @@ const completion = await guarded.chat.completions.create({ ... });
 ### OpenClaw / Hermes
 
 ```typescript
-import { wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-frameworks';
+import { wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-sdk/frameworks';
 
 const safeOpenClaw = wrapOpenClawAgent(myAgent, guard);
 const safeHermes = wrapHermesAgent(myHermesAgent, guard);
@@ -615,7 +600,7 @@ await safeStore.writeOperation(data); // secrets vaulted before write
 ### Installation
 
 ```bash
-pnpm add -D @roadsidelab/keyspot-cli
+pnpm add -D @roadsidelab/keyspot-sdk/cli
 ```
 
 ### Commands

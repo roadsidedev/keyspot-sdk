@@ -4,7 +4,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { KeySpot } from '@roadsidelab/keyspot-core';
-import { X402Facilitator } from '@roadsidelab/keyspot-x402';
+import { X402Facilitator } from './payments/index.js';
 import { MetricsRegistry, metricsMiddleware, metricsHandler } from './metrics.js';
 
 // ── Schema Validation ────────────────────────────────────────────

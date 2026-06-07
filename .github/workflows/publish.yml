@@ -31,8 +31,8 @@ jobs:
 
       - run: pnpm run test
 
-      - name: Publish packages
-        run: pnpm publish -r --access public --provenance --no-git-checks
+      - name: Publish to npm
+        run: pnpm publish --filter @roadsidelab/keyspot-sdk --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true

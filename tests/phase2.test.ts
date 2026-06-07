@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { KeySpot } from '@roadsidelab/keyspot-core';
-import { TaintEngine } from '@roadsidelab/keyspot-core/taint';
-import { Scanner } from '@roadsidelab/keyspot-core/scanner';
+import { KeySpot, TaintEngine, Scanner } from '@roadsidelab/keyspot-sdk';
 
 describe('Phase 2: Core Hardening', () => {
   // 2.4 Rotation Hooks

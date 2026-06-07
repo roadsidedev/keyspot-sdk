@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { KeySpot } from '@roadsidelab/keyspot-core';
-import { withKeySpot, wrapAnthropic, wrapOpenAI, wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-frameworks';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
+import { withKeySpot, wrapAnthropic, wrapOpenAI, wrapOpenClawAgent, wrapHermesAgent } from '@roadsidelab/keyspot-sdk/frameworks';
 
 describe('Framework Wrappers', () => {
   describe('withKeySpot (LangChain)', () => {

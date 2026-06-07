@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createApp } from './app.js';
 import { KeySpot } from '@roadsidelab/keyspot-core';
-import { X402Facilitator } from '@roadsidelab/keyspot-x402';
+import { X402Facilitator } from './payments/index.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 

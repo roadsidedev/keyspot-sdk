@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AuditLogger } from '@roadsidelab/keyspot-core/security';
+import { AuditLogger } from '@roadsidelab/keyspot-sdk';
 
 describe('AuditLogger', () => {
   it('logs events and returns an entry with hash', () => {

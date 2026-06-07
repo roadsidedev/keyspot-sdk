@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { writeFileSync, mkdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { KeySpot } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
 
 describe('CLI', () => {
   const testDir = join(tmpdir(), `keyspot-cli-test-${Date.now()}`);

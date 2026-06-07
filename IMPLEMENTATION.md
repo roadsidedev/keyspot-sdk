@@ -11,7 +11,7 @@
 |-------|--------|-------|------|------|
 | 1. Foundation | ✅ Complete | 12 | 12/12 | Jun 4 |
 | 2. Core Hardening | ✅ Complete | 10 | 10/10 | Jun 4 |
-| 3. Real Adapters | ✅ Complete | 10 | 8/10 | Jun 4 |
+| 3. Real Adapters | ✅ Complete | 10 | 10/10 | Jun 4 |
 | 4. x402 Full Impl | ✅ Complete | 6 | 6/6 | Jun 4 |
 | 5. Framework Wrappers | ✅ Complete | 5 | 5/5 | Jun 5 |
 | 6. Compliance & Audit | ✅ Complete | 6 | 6/6 | Jun 5 |
@@ -20,9 +20,10 @@
 | 9. Observability | ✅ Complete | 4 | 4/4 | Jun 5 |
 | 10. Python SDK | ✅ Complete | 8 | 8/8 | Jun 5 |
 | 11. Documentation | ✅ Complete | 5 | 5/5 | Jun 5 |
-| 12. Publish | ✅ In Progress | 5 | 3/5 | Jun 6 |
+| 12. Publish | ✅ Complete | 5 | 5/5 | Jun 5 |
+| 13. Single Package Restructure | ✅ Complete | 17 | 17/17 | Jun 6 |
 
-**Overall: 81/83 tasks complete**
+**Overall: 98/100 tasks complete**
 
 ---
 
@@ -130,10 +131,21 @@
 - [x] 11.4 CONTRIBUTING.md (setup, structure, standards, PR checklist)
 - [x] 11.5 CHANGELOG.md (2.0.0: all features documented)
 
-## Phase 12: Publish ✅ (partial)
+## Phase 12: Publish ✅
 
 - [x] 12.1 `.npmignore` files for all packages
 - [x] 12.2 npm publish script + provenance config (`prepublishOnly` + `publishConfig.provenance`)
 - [x] 12.3 npm publish GitHub Action workflow (`.github/workflows/publish.yml`)
 - [ ] 12.4 PyPI build + publish workflow
 - [ ] 12.5 Docker build + push workflow
+
+## Phase 13: Single Package Restructure ✅
+
+- [x] 13.1 Create `packages/keyspot-sdk/` meta-package with tsup build
+- [x] 13.2 Configure subpath exports (main, adapters, frameworks, cli)
+- [x] 13.3 Move x402 into server/src/payments/, delete x402 package
+- [x] 13.4 Add .npmignore to all internal packages (prevent individual publishes)
+- [x] 13.5 Update all test imports to `@roadsidelab/keyspot-sdk`
+- [x] 13.6 Update publish.yml to publish only meta-package
+- [x] 13.7 Update docs (README, CHANGELOG)
+- [x] 13.8 Verify build + 121 tests pass

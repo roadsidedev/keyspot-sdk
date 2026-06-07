@@ -1,6 +1,14 @@
 # Changelog
 
-## 2.0.0 (2026-06-05)
+## 2.0.0 (2026-06-06)
+
+### Packaging
+- Consolidated 8 separate npm packages into a single `@roadsidelab/keyspot-sdk` meta-package
+- `pnpm add @roadsidelab/keyspot-sdk` — one install, all features
+- Subpath exports: `/adapters`, `/frameworks`, `/cli`
+- x402 absorbed into server internals (no longer a standalone package)
+- Heavy external deps (pinecone, chromadb, etc.) are optional — only downloaded if needed
+- All internal packages retained in monorepo but no longer published individually
 
 ### Core
 - Scanner with 50+ secret patterns (AI keys, cloud creds, SaaS tokens, DB URLs, crypto keys, PII)
@@ -25,12 +33,6 @@
 - Real SDK integrations: Chroma, Pinecone, Qdrant, Weaviate, LanceDB, Milvus
 - Auto-sanitization of documents before vector DB upsert
 
-### x402 Micropayments
-- On-chain payment verification via Base (viem)
-- Real transaction validation (recipient, sender, recency checks)
-- Credit-based access control with 24h TTL
-- USDC transfer calldata generation
-
 ### Frameworks
 - LangChain Runnable wrapper (`withKeySpot`)
 - Anthropic SDK wrapper (`wrapAnthropic`)
@@ -38,12 +40,12 @@
 - OpenClaw agent wrapper
 - Hermes agent wrapper
 
-### Server
+### Server (self-hosted, Docker only)
 - Express server with Helmet, CORS, rate limiting
 - Zod input validation
 - Prometheus metrics endpoint (`/metrics`)
 - OpenTelemetry-style tracing
-- x402 payment gateway
+- Built-in x402 payment gateway
 
 ### CLI & DevOps
 - `keyspot scan` (recursive directory scanner)

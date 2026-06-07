@@ -1,12 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { KeySpot } from '@roadsidelab/keyspot-core';
-import { ChromaAdapter } from '@roadsidelab/keyspot-adapters/chroma';
-import { PineconeAdapter } from '@roadsidelab/keyspot-adapters/pinecone';
-import { QdrantAdapter } from '@roadsidelab/keyspot-adapters/qdrant';
-import { WeaviateAdapter } from '@roadsidelab/keyspot-adapters/weaviate';
-import { LanceDBAdapter } from '@roadsidelab/keyspot-adapters/lancedb';
-import { MilvusAdapter } from '@roadsidelab/keyspot-adapters/milvus';
-import { BaseVectorStoreAdapter } from '@roadsidelab/keyspot-adapters';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
+import { ChromaAdapter, PineconeAdapter, QdrantAdapter, WeaviateAdapter, LanceDBAdapter, MilvusAdapter, BaseVectorStoreAdapter } from '@roadsidelab/keyspot-sdk/adapters';
 
 describe('Vector Store Adapters', () => {
   describe('ChromaAdapter', () => {

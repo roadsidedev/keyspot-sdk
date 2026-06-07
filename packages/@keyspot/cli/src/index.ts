@@ -83,7 +83,7 @@ function installHook(): void {
   const hookPath = join(hookDir, 'pre-commit');
   const hookContent = `#!/bin/sh
 # KeySpot SDK pre-commit hook — scans staged files for secrets
-exec npx @roadsidelab/keyspot-cli scan --git
+exec npx @roadsidelab/keyspot-sdk/cli scan --git
 `;
 
   writeFileSync(hookPath, hookContent, 'utf-8');
@@ -106,7 +106,7 @@ OPTIONS
 `);
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) {

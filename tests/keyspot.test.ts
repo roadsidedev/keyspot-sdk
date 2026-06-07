@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { KeySpot } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
 
 describe('KeySpot (Integration)', () => {
   it('performs a full checkpoint cycle', async () => {

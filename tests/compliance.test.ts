@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateSigningKeyPair, signEntry, verifyEntrySignature, PersistedAuditLogger } from '@roadsidelab/keyspot-core/compliance';
-import { AuditEntry } from '@roadsidelab/keyspot-core/security';
+import { generateSigningKeyPair, signEntry, verifyEntrySignature, PersistedAuditLogger, AuditEntry } from '@roadsidelab/keyspot-sdk';
 import { existsSync, readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';

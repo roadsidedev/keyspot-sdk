@@ -4,14 +4,18 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
+      '@roadsidelab/keyspot-sdk': path.resolve(__dirname, 'packages/keyspot-sdk/src'),
+      '@roadsidelab/keyspot-sdk/adapters': path.resolve(__dirname, 'packages/@keyspot/adapters/src'),
+      '@roadsidelab/keyspot-sdk/frameworks': path.resolve(__dirname, 'packages/@keyspot/frameworks/src'),
+      '@roadsidelab/keyspot-sdk/cli': path.resolve(__dirname, 'packages/@keyspot/cli/src'),
+      // Internal aliases (resolved through meta-package)
       '@roadsidelab/keyspot-core': path.resolve(__dirname, 'packages/@keyspot/core/src'),
       '@roadsidelab/keyspot-vault': path.resolve(__dirname, 'packages/@keyspot/vault/src'),
       '@roadsidelab/keyspot-patterns': path.resolve(__dirname, 'packages/@keyspot/patterns/src'),
       '@roadsidelab/keyspot-adapters': path.resolve(__dirname, 'packages/@keyspot/adapters/src'),
-      '@roadsidelab/keyspot-x402': path.resolve(__dirname, 'packages/@keyspot/x402/src'),
-      '@roadsidelab/keyspot-server': path.resolve(__dirname, 'packages/@keyspot/server/src/app.ts'),
       '@roadsidelab/keyspot-frameworks': path.resolve(__dirname, 'packages/@keyspot/frameworks/src'),
       '@roadsidelab/keyspot-cli': path.resolve(__dirname, 'packages/@keyspot/cli/src'),
+      '@roadsidelab/keyspot-server': path.resolve(__dirname, 'packages/@keyspot/server/src/app.ts'),
       '@roadsidelab/keyspot-server/metrics': path.resolve(__dirname, 'packages/@keyspot/server/src/metrics.ts'),
     }
   },

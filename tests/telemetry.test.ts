@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ConsoleTracer, KeySpotTracer, noopTracer, setGlobalTracer, getGlobalTracer } from '@roadsidelab/keyspot-core/telemetry';
-import { KeySpot } from '@roadsidelab/keyspot-core';
+import { ConsoleTracer, KeySpotTracer, noopTracer, setGlobalTracer, getGlobalTracer, KeySpot } from '@roadsidelab/keyspot-sdk';
 
 describe('Telemetry (Tracer)', () => {
   it('noopTracer returns a span without throwing', () => {

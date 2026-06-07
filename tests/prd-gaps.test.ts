@@ -1,7 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { KeySpot, PrunerStrategy, CheckpointTrigger } from '@roadsidelab/keyspot-core';
-import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
-import { BaseVectorStoreAdapter } from '@roadsidelab/keyspot-core/adapters';
+import { KeySpot, PrunerStrategy, CheckpointTrigger, InMemoryVaultAdapter, BaseVectorStoreAdapter } from '@roadsidelab/keyspot-sdk';
 
 describe('PRD Gap: PrunerStrategy', () => {
   it('VAULT_WITH_TAINT is the default and vaults secrets', async () => {

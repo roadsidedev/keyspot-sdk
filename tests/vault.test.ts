@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
+import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-sdk';
 
 describe('Vault (InMemoryVaultAdapter)', () => {
   let vault: InMemoryVaultAdapter;

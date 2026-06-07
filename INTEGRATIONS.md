@@ -6,7 +6,7 @@ KeySpot is designed to be runtime-agnostic. Below are guides for integrating wit
 Manus agents can use KeySpot as a middleware in their `agent-loop`.
 
 ```typescript
-import { KeySpot } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
 
 const guard = new KeySpot();
 
@@ -29,7 +29,7 @@ async function manusLoop(state) {
 For open-source runtimes, use the `guard.wrap` method to intercept tool outputs.
 
 ```typescript
-import { KeySpot } from '@roadsidelab/keyspot-core';
+import { KeySpot } from '@roadsidelab/keyspot-sdk';
 
 const guard = new KeySpot({
   vault: new AWSSecretsAdapter({ region: 'us-east-1' })

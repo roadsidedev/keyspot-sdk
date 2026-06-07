@@ -11,17 +11,18 @@ pnpm run test
 ## Project Structure
 
 ```
-packages/@keyspot/
-├── core/          Scanner, TaintEngine, AuditLogger, PromptShield, WorkerPool, Telemetry
-├── patterns/      50+ built-in patterns + Aho-Corasick trie + PatternRegistry
-├── vault/         InMemoryVaultAdapter, AWSSecretsAdapter, HMAC refs
-├── adapters/      Chroma, Pinecone, Qdrant, Weaviate, LanceDB, Milvus
-├── x402/          Payment facilitator, client, Base chain verification
-├── server/        Express server, rate limiting, metrics, health checks
-├── frameworks/    LangChain, Anthropic, OpenAI, OpenClaw, Hermes wrappers
-├── cli/           keyspot scan, install, --git, --prune
-python/            Python SDK (full TypeScript parity)
-tests/             Vitest test suite
+packages/
+├── keyspot-sdk/     Meta-package (published to npm as @roadsidelab/keyspot-sdk)
+└── @keyspot/
+    ├── core/          Scanner, TaintEngine, AuditLogger, PromptShield, WorkerPool, Telemetry
+    ├── patterns/      50+ built-in patterns + Aho-Corasick trie + PatternRegistry
+    ├── vault/         InMemoryVaultAdapter, AWSSecretsAdapter, HMAC refs
+    ├── adapters/      Chroma, Pinecone, Qdrant, Weaviate, LanceDB, Milvus
+    ├── server/        Express server, rate limiting, metrics, x402 payments (Docker only)
+    ├── frameworks/    LangChain, Anthropic, OpenAI, OpenClaw, Hermes wrappers
+    └── cli/           keyspot scan, install, --git, --prune
+python/                Python SDK (full TypeScript parity)
+tests/                 Vitest test suite
 ```
 
 ## Coding Standards
@@ -44,7 +45,7 @@ cd python && pytest     # Run Python tests
 
 ```bash
 pnpm run build           # Build all packages
-pnpm --filter @roadsidelab/keyspot-core run build   # Build single package
+pnpm --filter @roadsidelab/keyspot-sdk run build   # Build meta-package
 ```
 
 ## Pull Request Checklist

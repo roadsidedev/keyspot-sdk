@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Scanner } from '@roadsidelab/keyspot-core/scanner';
-import { TaintEngine } from '@roadsidelab/keyspot-core/taint';
+import { Scanner, TaintEngine } from '@roadsidelab/keyspot-sdk';
 
 describe('Scanner', () => {
   it('detects an OpenAI key in a string', async () => {

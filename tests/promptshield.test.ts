@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PromptShield } from '@roadsidelab/keyspot-core/security';
+import { PromptShield } from '@roadsidelab/keyspot-sdk';
 
 describe('PromptShield', () => {
   it('blocks jailbreak attempts', async () => {
