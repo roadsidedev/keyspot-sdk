@@ -25,7 +25,58 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Prose overrides for cleaner docs */
+/* ── Prose overrides for spacious, readable docs ── */
+
+.prose {
+  max-width: none;
+}
+
+.prose p {
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+.prose h1 {
+  margin-bottom: 24px;
+}
+
+.prose h2 {
+  margin-top: 56px;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+}
+
+.prose h3 {
+  margin-top: 32px;
+  margin-bottom: 12px;
+}
+
+.prose > h2:first-child,
+.prose > h3:first-child {
+  margin-top: 0;
+}
+
+/* Section divider — subtle separator before every h2 (except first) */
+.prose h2 {
+  position: relative;
+}
+
+.prose h2::before {
+  content: "";
+  display: block;
+  height: 1px;
+  background: oklch(0.871 0.006 286.033 / 0.3);
+  margin-bottom: 48px;
+}
+
+.dark .prose h2::before {
+  background: oklch(0.373 0.034 259.733 / 0.4);
+}
+
+.prose > h2:first-of-type::before {
+  display: none;
+}
+
 .prose pre {
   border: 1px solid #e4e4e7;
   border-radius: 0.75rem;
@@ -44,32 +95,79 @@ body {
   content: none;
 }
 
+/* ── Lists ── */
+
+.prose ul,
+.prose ol {
+  margin-top: 20px;
+  margin-bottom: 24px;
+}
+
+.prose ul > li,
+.prose ol > li {
+  margin-bottom: 12px;
+}
+
+.prose ul > li:last-child,
+.prose ol > li:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Tables ── */
+
 .prose table {
   font-size: 0.875rem;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 24px;
+  margin-bottom: 32px;
 }
 
 .prose thead th {
   font-weight: 600;
   text-align: left;
   border-bottom: 2px solid #f4f4f5;
-  padding: 0.75rem 1rem;
+  padding: 16px 20px;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: oklch(0.551 0.027 264.364);
 }
 
 .dark .prose thead th {
   border-bottom-color: #18181b;
+  color: oklch(0.705 0.015 286.067);
 }
 
 .prose tbody td {
-  padding: 0.75rem 1rem;
+  padding: 16px 20px;
   border-bottom: 1px solid #f4f4f5;
   vertical-align: top;
+  line-height: 1.6;
 }
 
 .dark .prose tbody td {
   border-bottom-color: #18181b;
+}
+
+.prose tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.prose tbody tr:hover {
+  background: oklch(0.967 0.003 286.375);
+}
+
+.dark .prose tbody tr:hover {
+  background: oklch(0.269 0.015 277.509 / 0.5);
+}
+
+.prose tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .prose img {
@@ -82,7 +180,30 @@ body {
   border-color: #27272a;
 }
 
-/* Custom card component for MDX */
+/* ── Blockquotes ── */
+
+.prose blockquote {
+  border-left: 3px solid oklch(0.871 0.006 286.033);
+  padding-left: 20px;
+  font-style: italic;
+  color: oklch(0.551 0.027 264.364);
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+
+.dark .prose blockquote {
+  border-left-color: oklch(0.373 0.034 259.733);
+  color: oklch(0.705 0.015 286.067);
+}
+
+/* ── Code (inline) ── */
+
+.prose code {
+  font-size: 0.8125em;
+}
+
+/* ── Custom components ── */
+
 .docs-card {
   @apply p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:shadow-lg transition-all duration-300;
 }
@@ -105,4 +226,48 @@ html {
   opacity: 0.4;
   position: absolute;
   margin-left: -1.2rem;
+}
+
+/* ── Section card style (option B from spec) ── */
+.section-card {
+  background: oklch(0.985 0 0 / 0.5);
+  border: 1px solid oklch(0.922 0.004 286.066 / 0.5);
+  border-radius: 16px;
+  padding: 32px;
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+.dark .section-card {
+  background: oklch(0.269 0.015 277.509 / 0.3);
+  border-color: oklch(0.373 0.034 259.733 / 0.3);
+}
+
+/* ── Mobile typography ── */
+@media (max-width: 768px) {
+  .prose h1 {
+    font-size: 2rem;
+  }
+
+  .prose h2 {
+    font-size: 1.5rem;
+    margin-top: 40px;
+  }
+
+  .prose h3 {
+    font-size: 1.25rem;
+  }
+
+  .prose {
+    font-size: 1rem;
+  }
+
+  .prose p {
+    line-height: 1.7;
+  }
+
+  .prose pre {
+    font-size: 0.8rem;
+    padding: 1rem;
+  }
 }

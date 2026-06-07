@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Fragment } from 'react'
 
 interface SidebarGroup {
   label: string
@@ -14,16 +13,16 @@ export function DocSidebar({ groups, onItemClick }: { groups: SidebarGroup[] ; o
   const pathname = usePathname()
 
   return (
-    <aside className="w-full md:w-64 shrink-0 md:border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto">
-      <nav className="p-4 md:p-6 space-y-8">
-        {groups.map((group) => (
+    <aside className="w-full md:w-64 shrink-0 md:border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto md:h-[calc(100vh-4rem)] md:sticky md:top-16">
+      <nav className="p-4 md:p-5">
+        {groups.map((group, idx) => (
           <div key={group.label}>
             {group.separator && (
-              <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[2px] text-zinc-400 dark:text-zinc-500">
+              <div className={`px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-400 dark:text-zinc-500 ${idx > 0 ? 'mt-10' : ''}`}>
                 {group.label}
               </div>
             )}
-            <div className="space-y-0.5">
+            <div className={group.separator ? 'space-y-[6px]' : ''}>
               {group.pages.map((page) => {
                 const isActive = pathname === page.href
                 return (
@@ -31,7 +30,7 @@ export function DocSidebar({ groups, onItemClick }: { groups: SidebarGroup[] ; o
                     key={page.href}
                     href={page.href}
                     onClick={onItemClick}
-                    className={`block px-3 py-2 md:py-1.5 rounded-lg text-sm transition-all duration-200 ${
+                    className={`block px-4 py-3 md:py-2.5 rounded-lg text-sm transition-all duration-150 ${
                       isActive
                         ? 'bg-zinc-100 dark:bg-zinc-800 font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-zinc-200/50 dark:ring-zinc-700/50'
                         : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
