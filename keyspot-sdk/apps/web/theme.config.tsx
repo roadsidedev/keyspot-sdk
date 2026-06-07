@@ -5,9 +5,9 @@ export default {
     </span>
   ),
   project: {
-    link: 'https://github.com/roadsidelab/keyspot-sdk',
+    link: 'https://github.com/roadsidedev/keyspot-sdk',
   },
-  docsRepository: 'https://github.com/roadsidelab/keyspot-sdk',
+  docsRepository: 'https://github.com/roadsidedev/keyspot-sdk',
   head: (
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />

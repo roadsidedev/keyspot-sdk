@@ -9,48 +9,52 @@ description: Runtime credential hygiene for autonomous AI agents
 
 KeySpot SDK enforces a **Checkpoint → Scan → Vault → Replace → Continue** lifecycle at every critical boundary. Secrets never persist in agent memory — they are replaced with HMAC-signed vault references.
 
-```
-1. Checkpoint fires    → At a session boundary, memory save, or tool call
-2. Isolated scan       → Fresh Worker thread scans state against 40+ patterns
-3. Vault write         → Every matched secret is written to your vault adapter
-4. State sanitised     → Clean state returned; Worker terminates immediately
-5. Audit logged        → Outcome only — never the secret
-```
+## How it Works
 
-## Core Principle
+The SDK operates through a seamless five-step lifecycle to ensure your agent's memory remains clean and secure:
 
-> An agent should never hold a secret longer than it needs to.
+1.  **Checkpoint fires** — Triggered at session boundaries, memory saves, or tool calls.
+2.  **Isolated scan** — A fresh Worker thread scans state against 40+ known secret patterns.
+3.  **Vault write** — Every matched secret is securely written to your configured vault adapter.
+4.  **State sanitised** — The clean state is returned, and the Worker terminates immediately.
+5.  **Audit logged** — Only the outcome is recorded, never the sensitive secret itself.
 
-When a secret is detected during a checkpoint, it is immediately written to your chosen vault and replaced with a reference token. The agent continues operating with clean state.
+> **Core Principle:** An agent should never hold a secret longer than it needs to.
+
+When a secret is detected during a checkpoint, it is immediately written to your chosen vault and replaced with a reference token. The agent continues operating with a clean state, significantly reducing the attack surface.
 
 ## What KeySpot Catches
 
+The SDK is equipped to detect a wide range of sensitive information across multiple categories:
+
 | Category | Examples |
-|----------|----------|
-| Crypto private keys | Ethereum/EVM keys, Solana keypairs, PEM keys (RSA, EC, Ed25519, PGP, OpenSSH) |
-| AI provider keys | OpenAI (standard + project), Anthropic, Google/Gemini, HuggingFace, Replicate, Cohere |
-| Cloud credentials | AWS access key + secret + session, GCP service accounts, Azure connection strings, DigitalOcean |
-| Source control | GitHub (classic + app), GitLab PATs, npm tokens |
-| Payment processors | Stripe live + test keys |
-| Databases | PostgreSQL, MySQL, MongoDB, Redis connection URLs |
-| Comms & infra | Twilio, SendGrid, Mailgun, Mailchimp, HubSpot, Slack tokens + webhooks, Discord, PagerDuty |
-| Auth & tokens | JWT, Google OAuth refresh, Firebase, Dropbox, Cloudflare, Linear, Notion, Shopify, Heroku, Docker Hub |
-| PII | Credit card numbers, US Social Security Numbers |
-| Tainted derivations | Summaries, embeddings, or transformed copies of any of the above |
+| :--- | :--- |
+| **AI Provider Keys** | OpenAI, Anthropic, Google/Gemini, HuggingFace, Replicate, Cohere |
+| **Cloud Credentials** | AWS access/secret keys, GCP service accounts, Azure connection strings |
+| **Crypto Private Keys** | Ethereum/EVM keys, Solana keypairs, PEM keys (RSA, EC, PGP) |
+| **Databases** | PostgreSQL, MySQL, MongoDB, Redis connection URLs |
+| **Source Control** | GitHub (classic + app), GitLab PATs, npm tokens |
+| **Payment Processors** | Stripe live and test keys |
+| **Comms & Infra** | Twilio, SendGrid, Slack tokens + webhooks, Discord, PagerDuty |
+| **Auth & Tokens** | JWT, Google OAuth, Firebase, Dropbox, Shopify, Heroku |
+| **PII** | Credit card numbers, US Social Security Numbers |
+| **Tainted Derivations** | Summaries, embeddings, or transformed copies of sensitive data |
 
 ## Architecture
 
-KeySpot runs security checks in isolated worker threads so your main agent loop is never blocked. Every secret match is:
+KeySpot is designed for performance and security. It runs security checks in **isolated worker threads** so your main agent loop is never blocked. Every secret match is:
 
-1. Written to your vault adapter
-2. Replaced with a signed reference token (`vault:v1:{id}:{hmac}:{expiry}`)
-3. Logged for audit (outcome only — no secrets recorded)
+1.  Written to your vault adapter.
+2.  Replaced with a signed reference token: `vault:v1:{id}:{hmac}:{expiry}`.
+3.  Logged for audit purposes (outcome only).
 
-Taint tracking propagates to derived values. PromptShield blocks jailbreaks before they reach the LLM.
+Taint tracking ensures that security propagates to derived values, while **PromptShield** blocks jailbreaks before they can reach the LLM.
 
 ## Next Steps
 
-- [Installation](/doc/installation)
-- [Quick Start](/doc/quick-start)
-- [Core Concepts](/doc/concepts)
-- [API Reference](/doc/api-reference)
+Explore the following sections to get started with KeySpot SDK:
+
+- **[Installation](/doc/installation)** — Set up the SDK in your project.
+- **[Quick Start](/doc/quick-start)** — Run your first secure agent session.
+- **[Core Concepts](/doc/concepts)** — Learn about checkpoints, scanning, and vaulting.
+- **[API Reference](/doc/api-reference)** — Detailed documentation for all SDK methods.

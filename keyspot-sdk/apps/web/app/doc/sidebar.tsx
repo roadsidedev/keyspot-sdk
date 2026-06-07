@@ -10,12 +10,12 @@ interface SidebarGroup {
   pages: { href: string; label: string }[]
 }
 
-export function DocSidebar({ groups }: { groups: SidebarGroup[] }) {
+export function DocSidebar({ groups, onItemClick }: { groups: SidebarGroup[] ; onItemClick?: () => void }) {
   const pathname = usePathname()
 
   return (
-    <aside className="w-64 shrink-0 border-r border-zinc-200 dark:border-zinc-800 hidden md:block overflow-y-auto">
-      <nav className="sticky top-0 p-4 space-y-6">
+    <aside className="w-full md:w-64 shrink-0 md:border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto">
+      <nav className="p-4 md:p-6 space-y-8">
         {groups.map((group) => (
           <div key={group.label}>
             {group.separator && (
@@ -30,9 +30,10 @@ export function DocSidebar({ groups }: { groups: SidebarGroup[] }) {
                   <Link
                     key={page.href}
                     href={page.href}
-                    className={`block px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    onClick={onItemClick}
+                    className={`block px-3 py-2 md:py-1.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? 'bg-zinc-100 dark:bg-zinc-800 font-medium text-zinc-950 dark:text-white'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 font-semibold text-zinc-950 dark:text-white shadow-sm ring-1 ring-zinc-200/50 dark:ring-zinc-700/50'
                         : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
                     }`}
                   >
