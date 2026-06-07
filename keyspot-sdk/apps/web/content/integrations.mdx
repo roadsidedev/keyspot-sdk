@@ -5,34 +5,35 @@ description: Wrap popular AI frameworks with KeySpot
 
 # Framework Integrations
 
+Framework wrappers are available from `@roadsidelab/keyspot-sdk/frameworks`:
+
+```typescript
+import { withKeySpot, wrapAnthropic, wrapOpenAI } from '@roadsidelab/keyspot-sdk/frameworks';
+```
+
 ## LangChain
 
 ```typescript
-import { withKeySpot } from '@roadsidelab/keyspot-frameworks';
-
 const guardedChain = withKeySpot(myChain, guard);
 ```
 
 ## Anthropic
 
 ```typescript
-import { wrapAnthropic } from '@roadsidelab/keyspot-adapters/anthropic';
-
 const client = wrapAnthropic(anthropic, guard);
 ```
 
 ## OpenAI
 
 ```typescript
-import { wrapOpenAI } from '@roadsidelab/keyspot-adapters/openai';
-
 const client = wrapOpenAI(openai, guard);
 ```
 
-## Express Middleware
+## Self-Hosted Server
 
-```typescript
-import { keyspotMiddleware } from '@roadsidelab/keyspot-server';
+For self-hosted deployments with Express middleware, use the Docker image:
 
-app.use(keyspotMiddleware(guard));
+```bash
+docker build -t keyspot .
+docker run -p 3000:3000 keyspot
 ```

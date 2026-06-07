@@ -5,19 +5,21 @@ description: Store secrets in different backends
 
 # Vault Adapters
 
+All vault adapters are available from the main `@roadsidelab/keyspot-sdk` package:
+
+```typescript
+import { InMemoryVaultAdapter, EnvVaultAdapter, DotEnvVaultAdapter } from '@roadsidelab/keyspot-sdk';
+```
+
 ## In-Memory (default for testing)
 
 ```typescript
-import { InMemoryVaultAdapter } from '@roadsidelab/keyspot-vault';
-
 const vault = new InMemoryVaultAdapter();
 ```
 
 ## Environment Variables
 
 ```typescript
-import { EnvVaultAdapter } from '@roadsidelab/keyspot-vault';
-
 const vault = new EnvVaultAdapter({
   prefix: 'KEYSPOT_'
 });
@@ -26,8 +28,6 @@ const vault = new EnvVaultAdapter({
 ## Dotenv Files
 
 ```typescript
-import { DotEnvVaultAdapter } from '@roadsidelab/keyspot-vault';
-
 const vault = new DotEnvVaultAdapter({
   path: '.env.vault'
 });
@@ -36,7 +36,7 @@ const vault = new DotEnvVaultAdapter({
 ## HashiCorp Vault
 
 ```typescript
-import { HashiCorpVaultAdapter } from '@roadsidelab/keyspot-vault';
+import { HashiCorpVaultAdapter } from '@roadsidelab/keyspot-sdk';
 
 const vault = new HashiCorpVaultAdapter({
   address: 'https://vault.company.com',
@@ -48,7 +48,7 @@ const vault = new HashiCorpVaultAdapter({
 ## AWS Secrets Manager
 
 ```typescript
-import { AWSSecretsAdapter } from '@roadsidelab/keyspot-vault';
+import { AWSSecretsAdapter } from '@roadsidelab/keyspot-sdk';
 
 const vault = new AWSSecretsAdapter({
   region: 'us-east-1',

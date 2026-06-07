@@ -6,8 +6,7 @@ description: Get started with KeySpot in under 5 minutes
 # Quick Start
 
 ```typescript
-import { KeySpot } from '@roadsidelab/keyspot-core';
-import { EnvVaultAdapter } from '@roadsidelab/keyspot-vault';
+import { KeySpot, EnvVaultAdapter } from '@roadsidelab/keyspot-sdk';
 
 const guard = new KeySpot({
   vault: new EnvVaultAdapter(),
@@ -37,13 +36,22 @@ const result = await guard.wrap(async (state) => {
 
 ## CLI Usage
 
+The CLI is included with the SDK — no separate install needed.
+
 ```bash
 # Scan a directory for secrets
-npx @roadsidelab/keyspot-cli scan ./src
+npx @roadsidelab/keyspot-sdk/cli scan ./src
 
 # Auto-redact secrets in place
-npx @roadsidelab/keyspot-cli scan ./config --prune
+npx @roadsidelab/keyspot-sdk/cli scan ./config --prune
 
 # Install pre-commit hook
-npx @roadsidelab/keyspot-cli install
+npx @roadsidelab/keyspot-sdk/cli install
+```
+
+Or install it globally for convenience:
+
+```bash
+npm install -g @roadsidelab/keyspot-sdk
+keyspot scan ./src
 ```
