@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
+import { AuthProvider } from '@/lib/session'
+import { QueryProvider } from '@/lib/queryClient'
 import './globals.css'
 
 const geistSans = Geist({
@@ -14,9 +16,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'KeySpot SDK',
+  title: 'KeySpot — Runtime Security for AI Agents',
   description:
-    'Runtime security layer for autonomous AI agents. Detect, vault, and replace secrets at every checkpoint.',
+    'Detect, vault, and replace secrets at every checkpoint. Enterprise-grade runtime security for autonomous AI agents.',
 }
 
 export default function RootLayout({
@@ -30,14 +32,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AuthProvider>
+            <QueryProvider>
+              {children}
+            </QueryProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

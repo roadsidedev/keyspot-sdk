@@ -1,7 +1,7 @@
 {
   "name": "@roadsidelab/keyspot-server",
-  "version": "2.0.0",
-  "description": "KeySpot HTTP server with rate limiting, auth, and x402 payment support",
+  "version": "2.1.0",
+  "description": "KeySpot HTTP server with auth, API keys, Stripe subscriptions, and usage metrics",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,25 +11,46 @@
       "import": "./dist/app.js"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "prisma"],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
     "clean": "rm -rf dist",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
     "prepublishOnly": "pnpm run build"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.0.0",
+    "@prisma/client": "^6.0.0",
     "@roadsidelab/keyspot-core": "workspace:*",
-    "viem": "^2.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
     "express": "^4.18.0",
     "express-rate-limit": "^7.0.0",
     "helmet": "^7.0.0",
-    "cors": "^2.8.5",
+    "ioredis": "^5.4.0",
+    "jose": "^5.9.0",
+    "next-auth": "^5.0.0-beta.25",
+    "nodemailer": "^6.9.0",
+    "stripe": "^17.0.0",
+    "viem": "^2.0.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.0",
+    "@types/bcryptjs": "^2.4.0",
     "@types/cors": "^2.8.0",
+    "@types/express": "^4.17.0",
+    "@types/nodemailer": "^6.4.0",
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.0.0"
   },
   "license": "MIT",
@@ -42,7 +63,7 @@
     "url": "https://github.com/roadsidedev/keyspot-sdk",
     "directory": "packages/@keyspot/server"
   },
-  "keywords": ["keyspot", "server", "api", "x402"],
+  "keywords": ["keyspot", "server", "api", "auth", "stripe", "subscription"],
   "engines": {
     "node": ">=18.0.0"
   }

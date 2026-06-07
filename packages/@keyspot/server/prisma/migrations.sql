@@ -1,0 +1,31 @@
+-- Run after prisma migrate dev to enable TimescaleDB hypertable
+-- This file documents the manual migration steps
+
+-- CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+--
+-- SELECT create_hypertable('"UsageEvent"', 'timestamp',
+--   chunk_time_interval => INTERVAL '1 day',
+--   if_not_exists => TRUE
+-- );
+--
+-- CREATE INDEX IF NOT EXISTS idx_usage_user_time
+--   ON "UsageEvent" (user_id, timestamp DESC);
+--
+-- CREATE INDEX IF NOT EXISTS idx_usage_apikey_time
+--   ON "UsageEvent" (api_key_id, timestamp DESC);
+--
+-- CREATE MATERIALIZED VIEW IF NOT EXISTS usage_hourly
+--   WITH (timescaledb.continuous) AS
+--   SELECT user_id,
+--          time_bucket('1 hour', timestamp) AS bucket,
+--          count(*) as requests,
+--          avg(latency_ms) as avg_latency,
+--          count(*) FILTER (WHERE status_code >= 400) as errors
+--   FROM "UsageEvent"
+--   GROUP BY user_id, bucket;
+--
+-- SELECT add_continuous_aggregate_policy('usage_hourly',
+--   start_offset => INTERVAL '3 days',
+--   end_offset => INTERVAL '1 hour',
+--   schedule_interval => INTERVAL '1 hour'
+-- );

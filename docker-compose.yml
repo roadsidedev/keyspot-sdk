@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: keyspot
+      POSTGRES_PASSWORD: keyspot
+      POSTGRES_DB: keyspot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keyspot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    command: "listen --forward-to host.docker.internal:3000/stripe/webhook --skip-verify"
+    environment:
+      STRIPE_API_KEY: ${STRIPE_SECRET_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles:
+      - stripe
+
+volumes:
+  pgdata:

@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  OWNER
+}
+
+enum Tier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  emailVerified   DateTime?
+  passwordHash    String?
+  name            String?
+  image           String?
+  role            Role           @default(USER)
+  organizationId  String?
+  organization    Organization?  @relation(fields: [organizationId], references: [id])
+  apiKeys         ApiKey[]
+  subscription    Subscription?
+  usageEvents     UsageEvent[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([email])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  ownerId   String   @unique
+  owner     User     @relation(fields: [ownerId], references: [id])
+  members   User[]
+  apiKeys   ApiKey[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ApiKey {
+  id          String         @id @default(cuid())
+  prefix      String
+  keyHash     String
+  name        String
+  scopes      String[]
+  rateLimit   Int            @default(1000)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgId       String?
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  usageEvents UsageEvent[]
+  createdAt   DateTime       @default(now())
+  revokedAt   DateTime?
+
+  @@index([userId])
+  @@index([prefix])
+}
+
+model Subscription {
+  id                      String             @id @default(cuid())
+  stripeCustomerId        String             @unique
+  stripeSubscriptionId    String?            @unique
+  stripePriceId           String
+  stripeCurrentPeriodEnd  DateTime
+  status                  SubscriptionStatus @default(INCOMPLETE)
+  tier                    Tier               @default(FREE)
+  cancelAtPeriodEnd       Boolean            @default(false)
+  userId                  String             @unique
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+}
+
+model UsageEvent {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeyId   String?
+  apiKey     ApiKey?    @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  endpoint   String
+  method     String
+  statusCode Int
+  latencyMs  Int
+  metadata   Json?
+  timestamp  DateTime   @default(now()) @db.Timestamptz(6)
+
+  @@index([userId, timestamp])
+  @@index([apiKeyId, timestamp])
+}

@@ -6,8 +6,13 @@ import { z } from 'zod';
 import { KeySpot } from '@roadsidelab/keyspot-core';
 import { X402Facilitator } from './payments/index.js';
 import { MetricsRegistry, metricsMiddleware, metricsHandler } from './metrics.js';
-
-// ── Schema Validation ────────────────────────────────────────────
+import authRoutes from './routes/auth.js';
+import apiKeyRoutes from './routes/api-keys.js';
+import metricsRoutes from './routes/metrics.js';
+import stripeWebhookRoutes from './routes/stripe-webhook.js';
+import billingRoutes from './routes/billing.js';
+import { requireSubscription } from './middleware/requireSubscription.js';
+import { usageTracker } from './middleware/usageTracker.js';
 
 const checkpointSchema = z.object({
   state: z.record(z.any()).refine(v => v !== undefined, 'state is required'),
@@ -15,9 +20,7 @@ const checkpointSchema = z.object({
 });
 
 const verifySchema = z.object({
-  proof: z.object({
-    txHash: z.string().min(1),
-  }),
+  proof: z.object({ txHash: z.string().min(1) }),
   request: z.object({
     amount: z.string(),
     currency: z.string(),
@@ -25,8 +28,6 @@ const verifySchema = z.object({
     network: z.string(),
   }),
 });
-
-// ── App Factory ──────────────────────────────────────────────────
 
 export interface KeySpotServerConfig {
   guard?: KeySpot;
@@ -42,12 +43,9 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
 
   const app = express();
 
-  // Trust proxy if configured
   if (config.trustedProxies?.length) {
     app.set('trust proxy', config.trustedProxies.join(','));
   }
-
-  // ── Middleware ──
 
   // Security headers
   app.use(helmet());
@@ -55,16 +53,18 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   // CORS
   app.use(cors({
     origin: process.env.CORS_ORIGIN || '*',
-    methods: ['GET', 'POST'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   }));
 
-  // JSON body parsing
+  // Raw body for Stripe webhooks (must be before JSON parser)
+  app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json({ limit: '10mb' }));
 
   // Rate limiting
   const generalLimiter = rateLimit({
     windowMs: 60_000,
-    max: 100,
+    max: 200,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many requests, please try again later.' },
@@ -79,8 +79,9 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
     message: { error: 'Too many auth attempts, please try again later.' },
   });
 
-  // Metrics middleware
+  // Metrics + Usage tracking middleware
   app.use(metricsMiddleware);
+  app.use('/api', usageTracker);
 
   // Request logging
   app.use((req: Request, _res: Response, next: NextFunction) => {
@@ -91,13 +92,11 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
     next();
   });
 
-  // ── Routes ──
-
-  // Health check
+  // ── Health ──
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
       status: 'ok',
-      version: '2.0.0',
+      version: '2.1.0',
       timestamp: Date.now(),
       x402: enableX402,
     });
@@ -106,8 +105,19 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   // Prometheus metrics
   app.get('/metrics', metricsHandler);
 
-  // Checkpoint
-  app.post('/checkpoint', authLimiter, async (req: Request, res: Response) => {
+  // ── Auth Routes ──
+  app.use('/auth', authRoutes);
+
+  // ── API Routes (tracked by usageTracker) ──
+  app.use('/api/keys', apiKeyRoutes);
+  app.use('/api/metrics', metricsRoutes);
+  app.use('/api/billing', billingRoutes);
+
+  // ── Stripe Webhook ──
+  app.use('/stripe', stripeWebhookRoutes);
+
+  // ── Supported API endpoints (gated by subscription) ──
+  app.post('/checkpoint', authLimiter, requireSubscription('FREE'), async (req: Request, res: Response) => {
     try {
       const parsed = checkpointSchema.parse(req.body);
 
@@ -156,6 +166,12 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   // 404 handler
   app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Not found' });
+  });
+
+  // Error handler
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('[Error]', err);
+    res.status(500).json({ error: 'Internal server error' });
   });
 
   return app;
