@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { useState, useEffect } from 'react'
 import { DocSidebar } from './sidebar'
-import { Menu, X, ChevronRight, GithubIcon } from 'lucide-react'
+import { Menu, X, ChevronRight, GitBranch } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -106,7 +106,7 @@ export default function DocLayout({ children }: { children: ReactNode }) {
               rel="noopener noreferrer"
               className="text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white transition-colors"
             >
-              <GithubIcon size={20} />
+              <GitBranch size={20} />
             </a>
           </div>
         </div>
