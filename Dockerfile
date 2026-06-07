@@ -8,6 +8,9 @@ COPY keyspot-sdk/apps/ keyspot-sdk/apps/
 
 RUN corepack enable && corepack prepare && pnpm install --frozen-lockfile
 
+# Generate Prisma client (creates TypeScript types from schema)
+RUN pnpm --filter @roadsidelab/keyspot-server db:generate
+
 # Build the project
 RUN pnpm build
 
