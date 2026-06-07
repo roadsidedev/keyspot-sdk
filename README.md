@@ -148,4 +148,4 @@ cd python && pytest      # 20 Python tests
 
 ## License
 
-MIT — Free for self-hosting. Hosted tier via x402 micropayments on Base. twitter: @tonywtf__
+MIT — Free for self-hosting. Hosted tier via x402 micropayments on Base.
