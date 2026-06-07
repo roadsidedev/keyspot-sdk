@@ -7,8 +7,9 @@
 node_modules/
 .pnpm-store/
 
-# Frontend app (not needed for server)
-keyspot-sdk/
+# Frontend app build artifacts (source needed for pnpm workspace resolution)
+keyspot-sdk/apps/web/.next/
+keyspot-sdk/apps/web/node_modules/
 
 # Tests & coverage
 tests/

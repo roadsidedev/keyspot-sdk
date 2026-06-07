@@ -4,8 +4,9 @@ WORKDIR /app
 
 COPY tsconfig.json package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/ packages/
+COPY keyspot-sdk/apps/ keyspot-sdk/apps/
 
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+RUN corepack enable && corepack prepare && pnpm install --frozen-lockfile
 
 # Build the project
 RUN pnpm build
