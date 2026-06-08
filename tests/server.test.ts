@@ -1,18 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createApp } from '@roadsidelab/keyspot-server';
-import { createServer, AddressInfo } from 'net';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import http from 'http';
+import { AddressInfo } from 'net';
 import { MetricsRegistry, metrics } from '../packages/@keyspot/server/src/metrics.js';
 
-function startTestServer(app: any): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const server = app.listen(0, '127.0.0.1', () => {
-      const addr = server.address() as AddressInfo;
-      resolve(`http://127.0.0.1:${addr.port}`);
-    });
-    server.on('error', reject);
-  });
-}
+vi.mock('../packages/@keyspot/server/src/middleware/requireSubscription.js', () => ({
+  requireSubscription: () => (_req: any, _res: any, next: any) => next(),
+}));
+
+const { createApp } = await import('../packages/@keyspot/server/src/app.js');
 
 let baseUrl: string;
 let server: http.Server;
@@ -37,7 +32,7 @@ describe('Server API', () => {
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.status).toBe('ok');
-    expect(body.version).toBe('2.0.0');
+    expect(body.version).toBe('2.1.0');
   });
 
   it('POST /checkpoint validates request body', async () => {

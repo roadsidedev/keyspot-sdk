@@ -32,14 +32,7 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
-  "dependencies": {
-    "@roadsidelab/keyspot-core": "workspace:*",
-    "@roadsidelab/keyspot-vault": "workspace:*",
-    "@roadsidelab/keyspot-patterns": "workspace:*",
-    "@roadsidelab/keyspot-adapters": "workspace:*",
-    "@roadsidelab/keyspot-frameworks": "workspace:*",
-    "@roadsidelab/keyspot-cli": "workspace:*"
-  },
+  "dependencies": {},
   "optionalDependencies": {
     "@pinecone-database/pinecone": "^4.0.0",
     "chromadb": "^2.0.0",
@@ -65,7 +58,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/roadsidedev/keyspot-sdk"
+    "url": "git+https://github.com/roadsidedev/keyspot-sdk.git"
   },
   "keywords": ["keyspot", "ai-security", "secret-scanner", "taint-tracking", "vault", "prompt-shield"],
   "engines": {
