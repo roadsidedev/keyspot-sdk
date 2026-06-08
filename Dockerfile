@@ -16,4 +16,4 @@ RUN pnpm build
 
 EXPOSE 3000
 
-CMD ["node", "packages/@keyspot/server/dist/index.js"]
+CMD ["sh", "-c", "pnpm --filter @roadsidelab/keyspot-server db:migrate && node packages/@keyspot/server/dist/index.js"]

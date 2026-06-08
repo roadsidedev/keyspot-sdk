@@ -1,6 +1,6 @@
 {
   "name": "@roadsidelab/keyspot-sdk",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Runtime security layer for autonomous AI agents — single SDK package",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,7 +32,7 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
-  "dependencies": {
+  "devDependencies": {
     "@roadsidelab/keyspot-adapters": "workspace:*",
     "@roadsidelab/keyspot-cli": "workspace:*",
     "@roadsidelab/keyspot-core": "workspace:*",
@@ -60,8 +60,7 @@
   },
   "license": "MIT",
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "repository": {
     "type": "git",

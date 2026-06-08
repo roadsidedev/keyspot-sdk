@@ -39,7 +39,11 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     console.warn('[Email] No SMTP configured — email not sent to', to);
     return;
   }
-  await t.sendMail({ from: FROM, to, subject, html });
+  try {
+    await t.sendMail({ from: FROM, to, subject, html });
+  } catch (err) {
+    console.warn('[Email] Failed to send email:', err);
+  }
 }
 
 export function generateVerificationToken(): { token: string; hash: string } {
