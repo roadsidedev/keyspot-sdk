@@ -32,7 +32,14 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm run build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@roadsidelab/keyspot-adapters": "workspace:*",
+    "@roadsidelab/keyspot-cli": "workspace:*",
+    "@roadsidelab/keyspot-core": "workspace:*",
+    "@roadsidelab/keyspot-frameworks": "workspace:*",
+    "@roadsidelab/keyspot-patterns": "workspace:*",
+    "@roadsidelab/keyspot-vault": "workspace:*"
+  },
   "optionalDependencies": {
     "@pinecone-database/pinecone": "^4.0.0",
     "chromadb": "^2.0.0",

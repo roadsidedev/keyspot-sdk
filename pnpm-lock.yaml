@@ -257,6 +257,25 @@ importers:
         version: 5.9.3
 
   packages/keyspot-sdk:
+    dependencies:
+      '@roadsidelab/keyspot-adapters':
+        specifier: workspace:*
+        version: link:../@keyspot/adapters
+      '@roadsidelab/keyspot-cli':
+        specifier: workspace:*
+        version: link:../@keyspot/cli
+      '@roadsidelab/keyspot-core':
+        specifier: workspace:*
+        version: link:../@keyspot/core
+      '@roadsidelab/keyspot-frameworks':
+        specifier: workspace:*
+        version: link:../@keyspot/frameworks
+      '@roadsidelab/keyspot-patterns':
+        specifier: workspace:*
+        version: link:../@keyspot/patterns
+      '@roadsidelab/keyspot-vault':
+        specifier: workspace:*
+        version: link:../@keyspot/vault
     optionalDependencies:
       '@aws-sdk/client-secrets-manager':
         specifier: ^3.0.0
