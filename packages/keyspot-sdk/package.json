@@ -1,6 +1,6 @@
 {
   "name": "@roadsidelab/keyspot-sdk",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Runtime security layer for autonomous AI agents — single SDK package",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,6 +17,10 @@
     "./frameworks": {
       "types": "./dist/frameworks/index.d.ts",
       "import": "./dist/frameworks/index.js"
+    },
+    "./agent": {
+      "types": "./dist/agent/index.d.ts",
+      "import": "./dist/agent/index.js"
     },
     "./cli": {
       "types": "./dist/cli/index.d.ts",
@@ -35,6 +39,7 @@
   "devDependencies": {
     "@roadsidelab/keyspot-adapters": "workspace:*",
     "@roadsidelab/keyspot-cli": "workspace:*",
+    "@roadsidelab/keyspot-agent": "workspace:*",
     "@roadsidelab/keyspot-core": "workspace:*",
     "@roadsidelab/keyspot-frameworks": "workspace:*",
     "@roadsidelab/keyspot-patterns": "workspace:*",
