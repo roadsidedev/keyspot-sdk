@@ -8,7 +8,7 @@ COPY tsconfig.json package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/ packages/
 COPY keyspot-sdk/apps/ keyspot-sdk/apps/
 
-# Remove .env files so Prisma uses the Docker ENV, not localhost defaults
+# Remove .env files — DATABASE_URL comes from the deployment platform
 RUN find /app -name ".env" -type f -delete
 
 RUN corepack enable && corepack prepare && pnpm install --frozen-lockfile
@@ -21,6 +21,5 @@ RUN pnpm build
 
 EXPOSE 3000
 
-ENV DATABASE_URL="postgresql://keyspot:keyspot@postgres:5432/keyspot?schema=public"
-
-CMD ["sh", "-c", "export DATABASE_URL=\"${DATABASE_URL:-postgresql://keyspot:keyspot@postgres:5432/keyspot?schema=public}\" && pnpm --filter @roadsidelab/keyspot-server db:migrate && node packages/@keyspot/server/dist/index.js"]
+# DATABASE_URL and DIRECT_URL must be set by the deployment platform (e.g. Neon)
+CMD ["sh", "-c", "pnpm --filter @roadsidelab/keyspot-server db:migrate && node packages/@keyspot/server/dist/index.js"]

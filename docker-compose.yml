@@ -1,4 +1,5 @@
 services:
+  # Local development database (production uses Neon via DATABASE_URL env var)
   postgres:
     image: timescale/timescaledb:latest-pg16
     container_name: keyspot-db
