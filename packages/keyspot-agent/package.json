@@ -1,13 +1,10 @@
 {
-  "name": "@roadsidelab/keyspot-cli",
+  "name": "@roadsidelab/keyspot-agent",
   "version": "2.0.2",
-  "description": "KeySpot SDK CLI — scan files, install pre-commit hooks, and integrate with CI",
+  "description": "KeySpot auto-detect agent wrapper — one-line security for any AI agent framework",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "keyspot": "./dist/index.js"
-  },
   "files": ["dist"],
   "scripts": {
     "build": "tsc",
@@ -16,7 +13,7 @@
   },
   "dependencies": {
     "@roadsidelab/keyspot-core": "workspace:*",
-    "@roadsidelab/keyspot-patterns": "workspace:*"
+    "@roadsidelab/keyspot-frameworks": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -26,9 +23,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/roadsidedev/keyspot-sdk",
-    "directory": "packages/@keyspot/cli"
+    "directory": "packages/keyspot-agent"
   },
-  "keywords": ["keyspot", "cli", "secret-scanner", "pre-commit"],
+  "keywords": ["keyspot", "agent", "auto-detect", "security", "ai-agent"],
   "publishConfig": {
     "access": "public",
     "provenance": true

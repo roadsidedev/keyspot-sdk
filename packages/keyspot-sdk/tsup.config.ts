@@ -5,6 +5,7 @@ export default defineConfig({
     index: 'src/index.ts',
     'adapters/index': 'src/adapters/index.ts',
     'frameworks/index': 'src/frameworks/index.ts',
+    'agent/index': 'src/agent/index.ts',
     'cli/index': 'src/cli/index.ts',
   },
   format: ['esm'],
@@ -16,6 +17,7 @@ export default defineConfig({
     '@roadsidelab/keyspot-adapters',
     '@roadsidelab/keyspot-frameworks',
     '@roadsidelab/keyspot-cli',
+    '@roadsidelab/keyspot-agent',
   ],
   external: [
     '@pinecone-database/pinecone',

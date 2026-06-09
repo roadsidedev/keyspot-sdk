@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { KeySpot } from '@roadsidelab/keyspot-core';
 import { builtInPatterns } from '@roadsidelab/keyspot-patterns';
 
@@ -91,7 +91,7 @@ exec npx @roadsidelab/keyspot-sdk/cli scan --git
 }
 
 async function printHelp(): Promise<void> {
-  console.log(`KeySpot SDK v2.0.0 — Runtime security for AI agents
+  console.log(`KeySpot SDK v2.0.2 — Runtime security for AI agents
 
 USAGE
   keyspot scan <path>     Scan files for secrets
@@ -115,7 +115,7 @@ export async function main(): Promise<void> {
   }
 
   if (args.includes('--version') || args.includes('-v')) {
-    console.log('2.0.0');
+    console.log('2.0.2');
     return;
   }
 
@@ -126,7 +126,7 @@ export async function main(): Promise<void> {
 
   if (args[0] === 'scan' && args[1]) {
     await scanFiles({
-      path: args[1],
+      path: resolve(process.cwd(), args[1]),
       git: args.includes('--git'),
       prune: args.includes('--prune'),
       format: args.includes('--json') ? 'json' : 'text',

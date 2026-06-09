@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.2 (2026-06-09)
+
+### New
+- `@roadsidelab/keyspot-sdk/agent` — new `guardAgent()` auto-detect wrapper. One import, one call, any framework
+- `SKILL.md` at repo root — plug-and-play agent skill for Claude Code, Opencode, Cursor, etc.
+
+### Fixed
+- CLI path resolution: `keyspot scan ./src` now correctly resolves relative to CWD instead of pnpm store
+
+### Packaging
+- Added `@roadsidelab/keyspot-agent` package to monorepo
+
 ## 2.0.0 (2026-06-06)
 
 ### Packaging
