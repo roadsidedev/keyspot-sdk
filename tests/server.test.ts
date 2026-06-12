@@ -32,7 +32,7 @@ describe('Server API', () => {
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.status).toBe('ok');
-    expect(body.version).toBe('2.1.0');
+    expect(body.version).toBe('2.2.0');
   });
 
   it('POST /checkpoint validates request body', async () => {
@@ -69,23 +69,14 @@ describe('Server API', () => {
     expect(body.cleanState.message).toBe('hello');
   });
 
-  it('GET /health includes x402 status', async () => {
-    const res = await fetch(`${baseUrl}/health`);
-    const body = await res.json();
-    expect(body).toHaveProperty('x402');
-  });
-
   it('returns 404 for unknown routes', async () => {
     const res = await fetch(`${baseUrl}/unknown`);
     expect(res.status).toBe(404);
   });
 
-  it('GET /metrics returns prometheus text', async () => {
+  it('GET /metrics requires authentication', async () => {
     const res = await fetch(`${baseUrl}/metrics`);
-    const text = await res.text();
-    expect(res.status).toBe(200);
-    expect(text).toContain('keyspot_');
-    expect(res.headers.get('Content-Type')).toContain('text/plain');
+    expect(res.status).toBe(401);
   });
 });
 

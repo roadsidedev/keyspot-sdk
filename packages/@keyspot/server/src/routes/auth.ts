@@ -10,7 +10,9 @@ import { requireAuth } from '../middleware/requireAuth.js';
 
 const router: Router = Router();
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production');
+const jwtSecretRaw = process.env.JWT_SECRET;
+if (!jwtSecretRaw) throw new Error('JWT_SECRET environment variable is required');
+const JWT_SECRET = new TextEncoder().encode(jwtSecretRaw);
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '30d';
 
@@ -68,6 +70,13 @@ router.post('/register', async (req: Request, res: Response) => {
     await ensureFreeSubscription(user.id, email);
 
     const verificationToken = generateToken();
+    await prisma.emailVerificationToken.create({
+      data: {
+        tokenHash: hashToken(verificationToken),
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      },
+    });
     await sendVerificationEmail(email, verificationToken);
 
     const [accessToken, refreshToken] = await createTokens({
@@ -235,6 +244,16 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
 
     if (user) {
       const resetToken = generateToken();
+      const tokenHash = hashToken(resetToken);
+
+      await prisma.resetToken.create({
+        data: {
+          tokenHash,
+          userId: user.id,
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        },
+      });
+
       await sendPasswordResetEmail(email, resetToken);
     }
 
@@ -251,12 +270,39 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
 router.post('/reset-password', async (req: Request, res: Response) => {
   try {
     const { token, password } = resetSchema.parse(req.body);
+    const tokenHash = hashToken(token);
+
+    const stored = await prisma.resetToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!stored) {
+      res.status(400).json({ error: 'Invalid or expired reset token' });
+      return;
+    }
+
+    if (stored.usedAt) {
+      res.status(400).json({ error: 'Reset token has already been used' });
+      return;
+    }
+
+    if (stored.expiresAt < new Date()) {
+      res.status(400).json({ error: 'Reset token has expired' });
+      return;
+    }
+
     const passwordHash = await hashPassword(password);
 
-    await prisma.user.updateMany({
-      where: { id: token },
-      data: { passwordHash },
-    });
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: stored.userId },
+        data: { passwordHash },
+      }),
+      prisma.resetToken.update({
+        where: { id: stored.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
 
     res.json({ success: true });
   } catch (err: any) {

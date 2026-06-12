@@ -1,7 +1,13 @@
 import { Router, Request, Response } from 'express';
+import Stripe from 'stripe';
 import { constructWebhookEvent, syncSubscriptionFromStripe } from '../services/stripe.js';
+import { prisma } from '../utils/prisma.js';
 
 const router: Router = Router();
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-02-24-acacia' as any })
+  : null;
 
 router.post('/webhook', async (req: Request, res: Response) => {
   const signature = req.headers['stripe-signature'] as string;
@@ -32,7 +38,6 @@ async function handleStripeEvent(event: any): Promise<void> {
 
     case 'customer.subscription.deleted': {
       const sub = event.data.object;
-      const { prisma } = await import('../utils/prisma.js');
       await prisma.subscription.update({
         where: { stripeSubscriptionId: sub.id },
         data: { status: 'CANCELED' as any },
@@ -42,10 +47,8 @@ async function handleStripeEvent(event: any): Promise<void> {
 
     case 'invoice.payment_succeeded': {
       const invoice = event.data.object;
-      if (invoice.subscription) {
-        const stripe = await import('stripe');
-        const s = new stripe.Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2025-02-24-acacia' as any });
-        const subscription = await s.subscriptions.retrieve(invoice.subscription);
+      if (invoice.subscription && stripe) {
+        const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
         await syncSubscriptionFromStripe(subscription);
       }
       break;
@@ -54,7 +57,6 @@ async function handleStripeEvent(event: any): Promise<void> {
     case 'invoice.payment_failed': {
       const invoice = event.data.object;
       if (invoice.subscription) {
-        const { prisma } = await import('../utils/prisma.js');
         await prisma.subscription.update({
           where: { stripeSubscriptionId: invoice.subscription },
           data: { status: 'PAST_DUE' as any },
