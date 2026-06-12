@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import crypto from 'node:crypto';
 import { KeySpot } from '@roadsidelab/keyspot-core';
-import { X402Facilitator } from './payments/index.js';
+import { createX402Middleware, type X402Config } from './payments/index.js';
 import { MetricsRegistry, metricsMiddleware, metricsHandler } from './metrics.js';
 import authRoutes from './routes/auth.js';
 import apiKeyRoutes from './routes/api-keys.js';
@@ -19,30 +19,17 @@ import { requireAuth } from './middleware/requireAuth.js';
 
 const checkpointSchema = z.object({
   state: z.record(z.any()).refine(v => v !== undefined, 'state is required'),
-  agentWallet: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
-});
-
-const verifySchema = z.object({
-  proof: z.object({ txHash: z.string().min(1) }),
-  request: z.object({
-    amount: z.string(),
-    currency: z.string(),
-    payTo: z.string(),
-    network: z.string(),
-  }),
 });
 
 export interface KeySpotServerConfig {
   guard?: KeySpot;
-  facilitator?: X402Facilitator;
-  enableX402?: boolean;
+  x402?: X402Config;
   trustedProxies?: string[];
 }
 
 export function createApp(config: KeySpotServerConfig = {}): Express {
   const guard = config.guard ?? new KeySpot({ taintEnabled: true, promptShield: { enabled: true } });
-  const facilitator = config.facilitator;
-  const enableX402 = config.enableX402 ?? false;
+  const enableX402 = !!config.x402;
 
   const app = express();
 
@@ -64,7 +51,7 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json({ limit: '10mb' }));
 
-  // Request tracing — assign a unique ID to every request
+  // Request tracing
   app.use((req: Request, _res: Response, next: NextFunction) => {
     const requestId = req.headers['x-request-id'] as string || crypto.randomUUID();
     req.requestId = requestId;
@@ -90,7 +77,7 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
     message: { error: 'Too many auth attempts, please try again later.' },
   });
 
-  // Metrics + Usage tracking middleware
+  // Metrics + Usage tracking
   app.use(metricsMiddleware);
   app.use('/api', usageTracker);
 
@@ -105,10 +92,9 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
 
   // ── Health ──
   app.get('/health', (_req: Request, res: Response) => {
-    const dbOk = true; // Could be enhanced with actual DB ping
     res.json({
-      status: dbOk ? 'ok' : 'degraded',
-      version: '2.2.0',
+      status: 'ok',
+      version: '2.3.0',
       mode: enableX402 ? 'hybrid' : 'self-hosted',
       timestamp: Date.now(),
     });
@@ -117,10 +103,10 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   // Prometheus metrics (internal-facing, requires auth)
   app.get('/metrics', requireAuth, metricsHandler);
 
-  // ── Auth Routes (with strict rate limiting) ──
+  // ── Auth Routes ──
   app.use('/auth', authLimiter, authRoutes);
 
-  // ── API Routes (tracked by usageTracker) ──
+  // ── API Routes ──
   app.use('/api/keys', apiKeyRoutes);
   app.use('/api/metrics', metricsRoutes);
   app.use('/api/billing', billingRoutes);
@@ -128,29 +114,21 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   // ── Stripe Webhook ──
   app.use('/stripe', stripeWebhookRoutes);
 
-  // ── Supported API endpoints (gated by subscription) ──
+  // ── x402 Payment Middleware (official) ──
+  if (config.x402) {
+    const { middleware: x402Middleware } = createX402Middleware(config.x402);
+    app.use(x402Middleware);
+  }
+
+  // ── Checkpoint endpoint ──
+  // When x402 is enabled, this endpoint is protected by the paymentMiddleware above.
+  // The middleware intercepts requests, returns 402 with PAYMENT-REQUIRED if unpaid,
+  // verifies and settles via the facilitator when PAYMENT-SIGNATURE is present,
+  // then passes through to this handler.
   app.post('/checkpoint', authLimiter, requireSubscription('FREE'), async (req: Request, res: Response) => {
     try {
       const parsed = checkpointSchema.parse(req.body);
-
-      if (enableX402 && facilitator) {
-        if (parsed.agentWallet && !facilitator.hasAccess(parsed.agentWallet)) {
-          const paymentReq = facilitator.generatePaymentRequest('checkpoint');
-          res.status(402).json(paymentReq);
-          return;
-        }
-      }
-
       const cleanState = await guard.checkpoint(parsed.state);
-
-      // Deduct credit for successful checkpoint processing
-      if (enableX402 && facilitator && parsed.agentWallet) {
-        const amount = facilitator.calculateCost('checkpoint');
-        if (amount > 0n) {
-          facilitator.consumeCredit(parsed.agentWallet, amount);
-        }
-      }
-
       res.json({ cleanState });
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -162,30 +140,8 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
     }
   });
 
-  // ── Enable migration route ──
+  // ── Migration Routes ──
   app.use('/api/v1/migration', migrationRoutes);
-
-  // x402 payment verification
-  if (facilitator) {
-    app.post('/x402/verify', authLimiter, async (req: Request, res: Response) => {
-      try {
-        const parsed = verifySchema.parse(req.body);
-        const accessToken = await facilitator.verifyPayment(parsed.proof, parsed.request);
-        if (accessToken) {
-          res.json({ success: true, accessToken });
-        } else {
-          res.status(402).json({ success: false, error: 'Payment verification failed' });
-        }
-      } catch (err: any) {
-        if (err instanceof z.ZodError) {
-          res.status(400).json({ error: 'Invalid request body', details: err.errors });
-          return;
-        }
-        console.error('[x402]', err);
-        res.status(500).json({ error: 'Internal server error' });
-      }
-    });
-  }
 
   // 404 handler
   app.use((req: Request, res: Response) => {

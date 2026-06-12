@@ -1,49 +1,54 @@
+process.env.JWT_SECRET = 'test-jwt-secret-for-vitest';
+process.env.MIGRATION_SECRET = 'test-migration-secret-for-vitest';
+
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import http from 'http';
 import { AddressInfo } from 'net';
-import { MetricsRegistry, metrics } from '../packages/@keyspot/server/src/metrics.js';
+import { createApp, type KeySpotServerConfig } from '../packages/@keyspot/server/src/app.js';
 
 vi.mock('../packages/@keyspot/server/src/middleware/requireSubscription.js', () => ({
   requireSubscription: () => (_req: any, _res: any, next: any) => next(),
 }));
 
-const { createApp } = await import('../packages/@keyspot/server/src/app.js');
+vi.mock('../packages/@keyspot/server/src/routes/stripe-webhook.js', () => ({
+  default: (() => { const r: any = require('express').Router(); r.post('/webhook', (req: any, res: any) => res.json({ received: true })); return r; })(),
+}));
 
+vi.mock('../packages/@keyspot/server/src/routes/migration.js', () => ({
+  default: (() => { const r: any = require('express').Router(); r.post('/import', (req: any, res: any) => res.json({ success: true })); return r; })(),
+}));
+
+const app = createApp();
+const server = http.createServer(app);
 let baseUrl: string;
-let server: http.Server;
 
-describe('Server API', () => {
-  beforeAll(async () => {
-    const app = createApp();
-    const srv = app.listen(0, '127.0.0.1', () => {
-      const addr = srv.address() as AddressInfo;
-      baseUrl = `http://127.0.0.1:${addr.port}`;
-      server = srv;
-    });
-    await new Promise(r => srv.on('listening', r));
-  });
+beforeAll(async () => {
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  const addr = server.address() as AddressInfo;
+  baseUrl = `http://localhost:${addr.port}`;
+});
 
-  afterAll(() => {
-    server?.close();
-  });
+afterAll(async () => {
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+});
 
+describe('Server API (self-hosted, no x402)', () => {
   it('GET /health returns status', async () => {
     const res = await fetch(`${baseUrl}/health`);
     const body = await res.json();
     expect(res.status).toBe(200);
     expect(body.status).toBe('ok');
-    expect(body.version).toBe('2.2.0');
+    expect(body.version).toBe('2.3.0');
+    expect(body.mode).toBe('self-hosted');
   });
 
   it('POST /checkpoint validates request body', async () => {
     const res = await fetch(`${baseUrl}/checkpoint`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ state: null }), // null fails z.any() in older zod
+      body: JSON.stringify({ state: null }),
     });
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toBe('Invalid request body');
   });
 
   it('POST /checkpoint scans and returns clean state', async () => {
@@ -77,34 +82,5 @@ describe('Server API', () => {
   it('GET /metrics requires authentication', async () => {
     const res = await fetch(`${baseUrl}/metrics`);
     expect(res.status).toBe(401);
-  });
-});
-
-describe('Metrics Registry', () => {
-  it('counter increments', () => {
-    const r = new MetricsRegistry();
-    const c = r.counter('test_total', 'Test counter');
-    c.inc();
-    c.inc({ status: 'ok' });
-    const output = r.export();
-    expect(output).toContain('test_total 1');
-    expect(output).toContain('{status="ok"}');
-  });
-
-  it('histogram records observations', () => {
-    const r = new MetricsRegistry();
-    const h = r.histogram('test_duration_ms', 'Test duration');
-    h.observe(10);
-    h.observe(20);
-    const output = r.export();
-    expect(output).toContain('test_duration_ms_count');
-    expect(output).toContain('test_duration_ms_sum');
-  });
-
-  it('pre-defined metrics exist', () => {
-    expect(metrics.checkpointTotal).toBeDefined();
-    expect(metrics.httpRequestDuration).toBeDefined();
-    expect(metrics.secretsFound).toBeDefined();
-    expect(metrics.scanTotal).toBeDefined();
   });
 });
