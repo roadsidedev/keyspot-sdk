@@ -1,76 +1,70 @@
+process.env.JWT_SECRET = 'test-jwt-secret-for-vitest';
+process.env.MIGRATION_SECRET = 'test-migration-secret-for-vitest';
+
 import { describe, it, expect } from 'vitest';
-import { X402Facilitator } from '../packages/@keyspot/server/src/payments/index.js';
+import { createX402Middleware, DEFAULT_FACILITATOR_URLS } from '../packages/@keyspot/server/src/payments/index.js';
 
-describe('x402 Payment Protocol', () => {
-  const PAY_TO = '0x1234567890AbcdEF1234567890aBcdef12345678';
-
-  describe('X402Facilitator', () => {
-    const facilitator = new X402Facilitator({
-      network: 'base-sepolia',
-      payTo: PAY_TO,
-      pricing: { checkpoint: '0.0001', scan: '0.00005' },
-      rpcUrl: 'https://sepolia.base.org',
+describe('x402 Payment Protocol (official)', () => {
+  describe('DEFAULT_FACILITATOR_URLS', () => {
+    it('has testnet URL', () => {
+      expect(DEFAULT_FACILITATOR_URLS.testnet).toBe('https://x402.org/facilitator');
     });
 
-    it('generates payment requests with pricing', () => {
-      const req = facilitator.generatePaymentRequest('checkpoint');
-      expect(req.amount).toBe('0.0001');
-      expect(req.currency).toBe('USDC');
-      expect(req.payTo).toBe(PAY_TO);
-      expect(req.network).toBe('base-sepolia');
+    it('has mainnet CDP URL', () => {
+      expect(DEFAULT_FACILITATOR_URLS.mainnet.cdp).toBe('https://api.cdp.coinbase.com/platform/v2/x402');
     });
 
-    it('throws for unknown services', () => {
-      expect(() => facilitator.generatePaymentRequest('unknown')).toThrow();
+    it('has mainnet PayAI URL', () => {
+      expect(DEFAULT_FACILITATOR_URLS.mainnet.payai).toBe('https://facilitator.payai.network');
     });
 
-    it('tracks access for wallets', () => {
-      expect(facilitator.hasAccess(PAY_TO)).toBe(false);
-    });
-
-    it('verifies payment returns null for invalid tx', async () => {
-      const req = facilitator.generatePaymentRequest('checkpoint');
-      const result = await facilitator.verifyPayment({ txHash: '0xdead' }, req);
-      expect(result).toBeNull();
-    });
-
-    it('denies access before payment', () => {
-      expect(facilitator.hasAccess(PAY_TO)).toBe(false);
+    it('has mainnet Mogami URL', () => {
+      expect(DEFAULT_FACILITATOR_URLS.mainnet.mogami).toBe('https://facilitator.mogami.tech');
     });
   });
 
-  describe('Integration: x402 Server Flow', () => {
-    it('generates request and handles verification gracefully', async () => {
-      const facilitator = new X402Facilitator({
-        network: 'base-sepolia',
-        payTo: PAY_TO,
-        pricing: { checkpoint: '0.0001' },
-        rpcUrl: 'https://sepolia.base.org',
+  describe('createX402Middleware', () => {
+    it('creates middleware with testnet facilitator', () => {
+      const { middleware, facilitatorClient } = createX402Middleware({
+        facilitatorUrl: DEFAULT_FACILITATOR_URLS.testnet,
+        network: 'eip155:84532',
+        payTo: '0x1234567890AbcdEF1234567890aBcdef12345678',
+        routes: {
+          'POST /checkpoint': {
+            accepts: [{
+              scheme: 'exact',
+              price: '$0.0001',
+              network: 'eip155:84532',
+              payTo: '0x1234567890AbcdEF1234567890aBcdef12345678',
+            }],
+            description: 'Checkpoint endpoint',
+          },
+        },
       });
 
-      // 1. Generate payment request
-      const paymentReq = facilitator.generatePaymentRequest('checkpoint');
-      expect(paymentReq.amount).toBe('0.0001');
-
-      // 2. Verify payment (will fail gracefully in test env without real tx)
-      const result = await facilitator.verifyPayment({ txHash: '0x' + 'a'.repeat(64) }, paymentReq);
-      expect(result).toBeNull();
-
-      // 3. Access still denied
-      expect(facilitator.hasAccess('0x0000000000000000000000000000000000000000')).toBe(false);
+      expect(typeof middleware).toBe('function');
+      expect(facilitatorClient).toBeDefined();
     });
 
-    it('tracks credit consumption', () => {
-      const facilitator = new X402Facilitator({
-        network: 'base-sepolia',
-        payTo: PAY_TO,
-        pricing: { checkpoint: '0.0001' },
-        rpcUrl: 'https://sepolia.base.org',
+    it('creates middleware with mainnet CDP facilitator', () => {
+      const { middleware, facilitatorClient } = createX402Middleware({
+        facilitatorUrl: DEFAULT_FACILITATOR_URLS.mainnet.cdp,
+        network: 'eip155:8453',
+        payTo: '0x1234567890AbcdEF1234567890aBcdef12345678',
+        routes: {
+          'POST /checkpoint': {
+            accepts: [{
+              scheme: 'exact',
+              price: '$0.0001',
+              network: 'eip155:8453',
+              payTo: '0x1234567890AbcdEF1234567890aBcdef12345678',
+            }],
+          },
+        },
       });
 
-      // Manually grant credit (simulating payment verification)
-      const wallet = PAY_TO;
-      expect(facilitator.hasAccess(wallet)).toBe(false);
+      expect(typeof middleware).toBe('function');
+      expect(facilitatorClient).toBeDefined();
     });
   });
 });
