@@ -7,7 +7,9 @@ import { requireAuth } from '../middleware/requireAuth.js';
 const router: Router = Router();
 
 const MIGRATION_SECRET = process.env.MIGRATION_SECRET;
-if (!MIGRATION_SECRET) throw new Error('MIGRATION_SECRET environment variable is required');
+if (!MIGRATION_SECRET) {
+  console.warn('[Migration] MIGRATION_SECRET not set — migration routes will be disabled');
+}
 
 const importPassportSchema = z.object({
   passport: z.object({
@@ -38,6 +40,10 @@ const exportPassportSchema = z.object({
 
 // Migration-specific auth: checks for shared secret
 async function migrationAuth(req: Request, res: Response, next: any): Promise<void> {
+  if (!MIGRATION_SECRET) {
+    res.status(503).json({ error: 'Migration not configured (MIGRATION_SECRET missing)' });
+    return;
+  }
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer migration ')) {
     res.status(401).json({ error: 'Migration authentication required (Bearer migration <token>)' });
@@ -82,7 +88,7 @@ router.post('/import', requireAuth, migrationAuth, async (req: Request, res: Res
     // Verify passport Ed25519 signature against the agent's public key
     // Public key is derived from the wallet address via ERC-8004 registry
     // For now, verify against the migration secret as a fallback
-    if (!verifyPassportSignature(passport, passport.signature, MIGRATION_SECRET)) {
+    if (!verifyPassportSignature(passport, passport.signature, MIGRATION_SECRET!)) {
       res.status(401).json({ error: 'Invalid passport signature' });
       return;
     }
@@ -129,6 +135,11 @@ router.post('/import', requireAuth, migrationAuth, async (req: Request, res: Res
 
 router.post('/export', requireAuth, async (req: Request, res: Response) => {
   try {
+    if (!MIGRATION_SECRET) {
+      res.status(503).json({ error: 'Migration not configured (MIGRATION_SECRET missing)' });
+      return;
+    }
+
     const { walletAddress } = exportPassportSchema.parse(req.body);
 
     // Find agent
