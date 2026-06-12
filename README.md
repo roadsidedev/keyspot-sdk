@@ -6,17 +6,10 @@
 pnpm add @roadsidelab/keyspot-sdk
 ```
 
-…or load the agent skill into your AI coding agent:
+…or load the agent skill into your AI coding agent (Claude Code, Cursor, Windsurf, etc.):
 
 ```bash
-# Claude Code
-claude add skill https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md
-
-# Opencode
-opencode skill add https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md
-
-# Cursor — save to .cursor/skills/keyspot.md
-# Copilot — paste the URL into your agent instructions
+https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md
 ```
 
 KeySpot SDK enforces a **Checkpoint → Scan → Taint → Vault → Replace → Continue** lifecycle at every critical boundary. Secrets never persist in agent memory — they're replaced with HMAC-signed vault references.

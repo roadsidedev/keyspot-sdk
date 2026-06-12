@@ -40,6 +40,8 @@ const features = [
 ];
 
 export default function KeySpotLanding() {
+  const skillUrl = "https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md";
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white">
       {/* Nav */}
@@ -89,26 +91,15 @@ export default function KeySpotLanding() {
             <span>or load the agent skill</span>
             <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
           </div>
-          <div className="grid gap-2">
-            {[
-              { label: "Claude Code", cmd: "claude add skill https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md" },
-              { label: "Opencode", cmd: "opencode skill add https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md" },
-              { label: "Cursor", cmd: "Save to .cursor/skills/keyspot.md" },
-              { label: "GitHub Copilot", cmd: "Paste the URL into your agent instructions" },
-            ].map((item) => (
-              <div key={item.label} className="group relative flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-4 py-3 font-mono text-xs">
-                <span className="shrink-0 text-zinc-400 text-[10px] uppercase tracking-wider sm:min-w-[90px]">{item.label}</span>
-                <div className="flex-1 flex items-center gap-2 min-w-0">
-                  <code className="flex-1 text-left leading-relaxed truncate">{item.cmd}</code>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(item.cmd)}
-                    className="opacity-60 group-hover:opacity-100 transition p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded shrink-0"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
+          
+          <div className="group relative flex items-center gap-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-5 py-4 font-mono text-sm">
+            <code className="flex-1 text-left truncate">{skillUrl}</code>
+            <button
+              onClick={() => navigator.clipboard.writeText(skillUrl)}
+              className="opacity-60 group-hover:opacity-100 transition p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
