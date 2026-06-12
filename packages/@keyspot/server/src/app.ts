@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
+import crypto from 'node:crypto';
 import { KeySpot } from '@roadsidelab/keyspot-core';
 import { X402Facilitator } from './payments/index.js';
 import { MetricsRegistry, metricsMiddleware, metricsHandler } from './metrics.js';
@@ -11,8 +12,10 @@ import apiKeyRoutes from './routes/api-keys.js';
 import metricsRoutes from './routes/metrics.js';
 import stripeWebhookRoutes from './routes/stripe-webhook.js';
 import billingRoutes from './routes/billing.js';
+import migrationRoutes from './routes/migration.js';
 import { requireSubscription } from './middleware/requireSubscription.js';
 import { usageTracker } from './middleware/usageTracker.js';
+import { requireAuth } from './middleware/requireAuth.js';
 
 const checkpointSchema = z.object({
   state: z.record(z.any()).refine(v => v !== undefined, 'state is required'),
@@ -61,6 +64,14 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   app.use('/stripe/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json({ limit: '10mb' }));
 
+  // Request tracing — assign a unique ID to every request
+  app.use((req: Request, _res: Response, next: NextFunction) => {
+    const requestId = req.headers['x-request-id'] as string || crypto.randomUUID();
+    req.requestId = requestId;
+    _res.setHeader('x-request-id', requestId);
+    next();
+  });
+
   // Rate limiting
   const generalLimiter = rateLimit({
     windowMs: 60_000,
@@ -94,19 +105,20 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
 
   // ── Health ──
   app.get('/health', (_req: Request, res: Response) => {
+    const dbOk = true; // Could be enhanced with actual DB ping
     res.json({
-      status: 'ok',
-      version: '2.1.0',
+      status: dbOk ? 'ok' : 'degraded',
+      version: '2.2.0',
+      mode: enableX402 ? 'hybrid' : 'self-hosted',
       timestamp: Date.now(),
-      x402: enableX402,
     });
   });
 
-  // Prometheus metrics
-  app.get('/metrics', metricsHandler);
+  // Prometheus metrics (internal-facing, requires auth)
+  app.get('/metrics', requireAuth, metricsHandler);
 
-  // ── Auth Routes ──
-  app.use('/auth', authRoutes);
+  // ── Auth Routes (with strict rate limiting) ──
+  app.use('/auth', authLimiter, authRoutes);
 
   // ── API Routes (tracked by usageTracker) ──
   app.use('/api/keys', apiKeyRoutes);
@@ -130,6 +142,15 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
       }
 
       const cleanState = await guard.checkpoint(parsed.state);
+
+      // Deduct credit for successful checkpoint processing
+      if (enableX402 && facilitator && parsed.agentWallet) {
+        const amount = facilitator.calculateCost('checkpoint');
+        if (amount > 0n) {
+          facilitator.consumeCredit(parsed.agentWallet, amount);
+        }
+      }
+
       res.json({ cleanState });
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -140,6 +161,9 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // ── Enable migration route ──
+  app.use('/api/v1/migration', migrationRoutes);
 
   // x402 payment verification
   if (facilitator) {
@@ -164,14 +188,15 @@ export function createApp(config: KeySpotServerConfig = {}): Express {
   }
 
   // 404 handler
-  app.use((_req: Request, res: Response) => {
-    res.status(404).json({ error: 'Not found' });
+  app.use((req: Request, res: Response) => {
+    res.status(404).json({ error: 'Not found', requestId: req.requestId });
   });
 
   // Error handler
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error('[Error]', err);
-    res.status(500).json({ error: 'Internal server error' });
+  app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+    const requestId = req.requestId;
+    console.error(`[Error] ${requestId}:`, err);
+    res.status(500).json({ error: 'Internal server error', requestId });
   });
 
   return app;

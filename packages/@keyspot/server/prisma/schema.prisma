@@ -98,19 +98,95 @@ model Subscription {
   updatedAt               DateTime           @updatedAt
 }
 
+enum RevenueSource {
+  SUBSCRIPTION
+  X402
+}
+
+enum AgentStatus {
+  ACTIVE
+  SUSPENDED
+  MIGRATED
+}
+
+model AgentIdentity {
+  id              String      @id @default(cuid())
+  agentId         String
+  agentRegistry   String
+  walletAddress   String      @unique
+  configSnapshot  Json?
+  tier            Tier        @default(FREE)
+  status          AgentStatus @default(ACTIVE)
+  lastActiveAt    DateTime?
+  usageEvents     UsageEvent[]
+  accessGrants    X402AccessGrant[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([agentId, agentRegistry])
+  @@index([walletAddress])
+}
+
+model X402AccessGrant {
+  id              String       @id @default(cuid())
+  agentIdentityId String?
+  agentIdentity   AgentIdentity? @relation(fields: [agentIdentityId], references: [id], onDelete: SetNull)
+  walletAddress   String       @unique
+  credit          BigInt       @default(0)
+  expiry          DateTime
+  endpoint        String
+  freeQuotaUsed   Int          @default(0)
+  freeQuotaReset  DateTime     @default(now())
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([walletAddress])
+  @@index([expiry])
+}
+
 model UsageEvent {
-  id         String     @id @default(cuid())
-  userId     String
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  apiKeyId   String?
-  apiKey     ApiKey?    @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
-  endpoint   String
-  method     String
-  statusCode Int
-  latencyMs  Int
-  metadata   Json?
-  timestamp  DateTime   @default(now()) @db.Timestamptz(6)
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeyId        String?
+  apiKey          ApiKey?       @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  agentIdentityId String?
+  agentIdentity   AgentIdentity? @relation(fields: [agentIdentityId], references: [id], onDelete: SetNull)
+  revenueSource   RevenueSource @default(SUBSCRIPTION)
+  x402Wallet      String?
+  endpoint        String
+  method          String
+  statusCode      Int
+  latencyMs       Int
+  metadata        Json?
+  timestamp       DateTime      @default(now()) @db.Timestamptz(6)
 
   @@index([userId, timestamp])
   @@index([apiKeyId, timestamp])
+  @@index([agentIdentityId, timestamp])
+  @@index([revenueSource])
+}
+
+model ResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([tokenHash])
+  @@index([expiresAt])
 }

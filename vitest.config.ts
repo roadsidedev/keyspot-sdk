@@ -36,6 +36,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    env: {
+      JWT_SECRET: 'test-jwt-secret-for-vitest',
+      MIGRATION_SECRET: 'test-migration-secret-for-vitest',
+      X402_JWT_SECRET: 'test-x402-jwt-secret-for-vitest',
+    },
     include: ['tests/**/*.test.ts', 'packages/*/src/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
     coverage: {
