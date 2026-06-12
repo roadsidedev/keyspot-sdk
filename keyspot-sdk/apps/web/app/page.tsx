@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   Copy, ExternalLink, GitBranch, BookOpen, CreditCard,
   Shield, Sparkles, FileSearch, Lock, Eye, Brain, Cpu
@@ -41,6 +42,20 @@ const features = [
 
 export default function KeySpotLanding() {
   const skillUrl = "https://raw.githubusercontent.com/roadsidedev/keyspot-sdk/main/SKILL.md";
+  const [copiedNpm, setCopiedNpm] = useState(false);
+  const [copiedSkill, setCopiedSkill] = useState(false);
+
+  const handleCopyNpm = () => {
+    navigator.clipboard.writeText("npm install @roadsidelab/keyspot-sdk");
+    setCopiedNpm(true);
+    setTimeout(() => setCopiedNpm(false), 2000);
+  };
+
+  const handleCopySkill = () => {
+    navigator.clipboard.writeText(skillUrl);
+    setCopiedSkill(true);
+    setTimeout(() => setCopiedSkill(false), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white">
@@ -80,9 +95,13 @@ export default function KeySpotLanding() {
           <div className="group relative flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-5 py-4 font-mono text-sm">
             <code className="flex-1 text-left">npm install @roadsidelab/keyspot-sdk</code>
             <button
-              onClick={() => navigator.clipboard.writeText("npm install @roadsidelab/keyspot-sdk")}
-              className="opacity-60 group-hover:opacity-100 transition p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded"
+              onClick={handleCopyNpm}
+              className="opacity-60 group-hover:opacity-100 transition p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded relative"
+              title="Copy to clipboard"
             >
+              {copiedNpm ? (
+                <span className="text-xs font-medium text-green-600 dark:text-green-400 absolute -top-8 right-0 whitespace-nowrap">Copied!</span>
+              ) : null}
               <Copy className="h-4 w-4" />
             </button>
           </div>
@@ -92,12 +111,16 @@ export default function KeySpotLanding() {
             <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
           </div>
           
-          <div className="group relative flex items-center gap-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-5 py-4 font-mono text-sm">
-            <code className="flex-1 text-left truncate">{skillUrl}</code>
+          <div className="group relative flex items-center gap-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 px-5 py-4 font-mono text-sm overflow-x-auto">
+            <code className="flex-shrink-0 text-left whitespace-nowrap">{skillUrl}</code>
             <button
-              onClick={() => navigator.clipboard.writeText(skillUrl)}
-              className="opacity-60 group-hover:opacity-100 transition p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded"
+              onClick={handleCopySkill}
+              className="opacity-60 group-hover:opacity-100 transition p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded flex-shrink-0 relative"
+              title="Copy to clipboard"
             >
+              {copiedSkill ? (
+                <span className="text-xs font-medium text-green-600 dark:text-green-400 absolute -top-8 right-0 whitespace-nowrap">Copied!</span>
+              ) : null}
               <Copy className="h-4 w-4" />
             </button>
           </div>
